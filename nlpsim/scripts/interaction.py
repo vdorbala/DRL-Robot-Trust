@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 import rospy
 import cv2
 import numpy as np
@@ -10,6 +11,8 @@ from nav_msgs.msg import Odometry
 from nlpsim.msg import Peoplepose
 
 from yolov3_pytorch_ros.msg import BoundingBoxes, BoundingBox
+
+import send_goal
 
 
 class personposeclass(object):
@@ -23,16 +26,15 @@ class personposeclass(object):
         x = np.round(data.xval,3)
         y = np.round(data.yval,3)
         yaw = np.round(data.yawval,3)
+        number = re.findall("\d+", name)[0]
 
-        if name not in namelist and [x,y] not in pose_list:
-            number = re.findall("\d+", name)[0]
+        if name not in namelist and [number,x,y,yaw] not in pose_list:
             namelist.append(name)
-            pose_list.append([number,x,y,yaw])
+            pose_list.append([number, x, y, yaw])
 
     def unsubscribe(self):
     # use the saved subscriber object to unregister the subscriber
         self.sub.unregister()
-
 
 
 
@@ -67,20 +69,28 @@ class objectdetectclass(object):
         self.objclass = ""
         self.probability = 0.0
 
+        self.area = 0.0
+
     def callback(self,data):
 
         box = BoundingBoxes()
 
-        box = data.bounding_boxes[0]
+        if data.bounding_boxes:
+            box = data.bounding_boxes[0]
+
+        else:
+            return 0
 
         self.objclass = box.Class
 
         self.probability = box.probability
 
+        self.area = (box.xmax - box.xmin)*(box.ymax - box.ymin)
+
     def human_detect(self):
 
-        if (self.objclass=="human"):
-            return (self.probability)
+        if (self.objclass=="person"):
+            return (self.area)
 
     def unsubscribe(self):
     # use the saved subscriber object to unregister the subscriber
@@ -91,39 +101,59 @@ def main():
 
     global pose_list
 
-    print("Reached main successfully!")
+    print("Retrieved poses successfully!")
+    pose_list = np.array(pose_list)
 
-    pose_list = np.array(sorted(pose_list, key=lambda x: (x[0],x[1])))
+    pose_list = pose_list[pose_list[:,0].argsort()]
 
     poses = pose_list[:, [1,2]]
 
-    names = pose_list[:,0]
+    orientations = np.absolute(pose_list[:,[3]].astype(np.float))
+
+    names = pose_list[:, 0]
 
     robotobj = robotposeclass()
 
-    while not robotobj.getpose():
-        continue
+    while not rospy.is_shutdown():
 
-    pose = np.array(robotobj.getpose())
+        while not robotobj.getpose():
+            continue
 
-    x = pose[0]
-    y = pose[1]
-    w = pose[2]
+        robot_pose = np.array(robotobj.getpose())
 
-    detector = objectdetectclass()
+        x = robot_pose[0]
+        y = robot_pose[1]
+        w = np.round(robot_pose[2] - (np.pi/2), 3)
 
-    while not detector.human_detect():
-        continue
+        detector = objectdetectclass()
 
-    print(detector.human_detect())
+        while not detector.human_detect():
+            continue
 
-    print("Robot pose is {}".format(pose[0:2]))
+        area = detector.human_detect()
 
-    contactval = distance.cdist([(x,y)], poses, 'euclidean')
+        print("Area of first person detected is {}".format(area))
+        print("Robot pose is {}, {}".format(robot_pose[0:2],w))
 
-    close_human = names[np.where(contactval == np.min(contactval))[1]]
+        contactval = distance.cdist([(x,y)], poses, 'euclidean')
 
-    print("Closest human is {}".format(close_human))
+        close_dist = np.where(contactval == np.min(contactval))[1]
+        close_pose = pose_list[close_dist]
+        close_orientation = orientations[close_dist]
+
+        orientval = np.absolute(np.subtract(abs(w), close_orientation))
+
+        print("Closest human is {}, who is {}m in front of the robot. \n Orientation is {}.".format(close_pose, np.min(contactval), np.min(orientval)))
+
+        if np.min(contactval)<1.8 and orientval>np.pi/4 and area>25000:
+            print("Sending stop command!")
+            result = send_goal.movebase_client(0,0,0)
+            if result:
+                rospy.loginfo("Detected human and stopped!")
+
+        print(orientval,np.pi/4)
+        # orient_dist = np.where(orientval == np.min(orientval))[0]
+        print("Orientation distances are {}".format(np.min(orientval)))
 
     return 0
 
@@ -148,7 +178,6 @@ if __name__ == '__main__':
 
     while True:
         if len(namelist) >= NUM_PEOPLE:
-            print("UNREGISTERING Subscriber!")
             personobj.unsubscribe()
             break
 

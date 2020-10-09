@@ -1,0 +1,5 @@
+<launch>
+
+<node name="move_people" pkg="nlpsim" type="move_person.sh" />
+  
+</launch>

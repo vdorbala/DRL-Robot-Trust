@@ -3,7 +3,7 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
   <arg name="use_sim_time" value="true"/>
   <arg name="debug" value="false"/>
-  <arg name="world_name" value="$(find nlpsim)/worlds/testenv_without_robot.world"/>
+  <arg name="world_name" value="$(find nlpsim)/worlds/gullible.world"/>
   </include>
 
   <group ns="/robot_1">
@@ -21,8 +21,7 @@
   <remap from="move_base_simple/goal" to="robot_1/move_base_simple/goal"/>
   </node>
 
-  <!-- <node pkg="nlpsim" type="interaction.py" name="interaction"/> -->
-
-  <!-- <node pkg="nlpsim" type="random_pose_generator.py" name="pose_gen"/> -->
+  <include file="$(find nlpsim)/launch/detector.launch">
+  </include>
 
 </launch>

@@ -1,0 +1,7 @@
+<launch>
+
+  <node pkg="nlpsim" type="random_pose_generator.py" name="pose_gen"/>
+
+  <node pkg="nlpsim" type="interaction.py" name="interaction"/>
+
+</launch>
