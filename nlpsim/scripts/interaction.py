@@ -12,7 +12,21 @@ from nlpsim.msg import Peoplepose
 
 from yolov3_pytorch_ros.msg import BoundingBoxes, BoundingBox
 
+from gazebo_msgs.msg import ModelState
+from gazebo_msgs.srv import *
+
 import send_goal
+from std_srvs.srv import Empty
+
+
+def gms_client(model_name,relative_entity_name):
+    rospy.wait_for_service('/gazebo/get_model_state')
+    try:
+        gms = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+        resp1 = gms(model_name,relative_entity_name)
+        return resp1
+    except rospy.ServiceException, e:
+        print "Service call failed: %s"%e
 
 
 class personposeclass(object):
@@ -41,8 +55,15 @@ class personposeclass(object):
 class robotposeclass(object):
     def __init__(self):
     # save the subscriber object to a class member
-        self.sub = rospy.Subscriber("/robot_1/odom",Odometry, self.callback, queue_size=20)
+        self.sub = rospy.Subscriber("/robot_1/odom", Odometry, self.callback, queue_size=20)
+        self.res = gms_client("robot_1", "link")
         self.pose = []
+
+        x_gz = np.round(self.res.pose.position.x,3)
+        y_gz = np.round(self.res.pose.position.y,3)
+        w_gz = np.round(self.res.pose.orientation.w,3)
+
+        self.pose_gz = [x_gz, y_gz, w_gz]
 
     def callback(self,data):
 
@@ -53,7 +74,8 @@ class robotposeclass(object):
         self.pose = [x,y,w]
 
     def getpose(self):
-            return self.pose
+            return self.pose_gz
+            # return self.pose
 
     def unsubscribe(self):
     # use the saved subscriber object to unregister the subscriber
@@ -95,6 +117,8 @@ class objectdetectclass(object):
     def unsubscribe(self):
     # use the saved subscriber object to unregister the subscriber
         self.sub.unregister()
+
+
 
 
 def main():
@@ -145,9 +169,10 @@ def main():
 
         print("Closest human is {}, who is {}m in front of the robot. \n Orientation is {}.".format(close_pose, np.min(contactval), np.min(orientval)))
 
-        if np.min(contactval)<1.8 and orientval>np.pi/4 and area>25000:
+        if np.min(contactval)<1.8 and orientval>np.pi/4 and area>30000:
             print("Sending stop command!")
             result = send_goal.movebase_client(0,0,0)
+            pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
             if result:
                 rospy.loginfo("Detected human and stopped!")
 
@@ -157,23 +182,17 @@ def main():
 
     return 0
 
-
 if __name__ == '__main__':
 
-    NUM_PEOPLE = 7
-    
     global sub
-
-    namelist = []
     
+    NUM_PEOPLE = 7
+    namelist = []
     pose_list = []
-
     rospy.init_node('interaction')
-
 
     # sub = rospy.Subscriber("/person_pose", Peoplepose, callback)
     # rospy.spin()
-
     personobj = personposeclass()
 
     while True:
@@ -182,6 +201,3 @@ if __name__ == '__main__':
             break
 
     main()
-
-    # if sub != 0:
-    #     main(

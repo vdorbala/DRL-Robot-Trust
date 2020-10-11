@@ -9,7 +9,7 @@ import actionlib
 # Brings in the .action file and messages used by the move base action
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
-def movebase_client(x = random.uniform(-9, 9), y = random.uniform(-9, 9), w = random.uniform(-np.pi, np.pi)):
+def movebase_client(x = random.uniform(-22, 22), y = random.uniform(-17, 17), w = random.uniform(-np.pi, np.pi)):
 
     # Create an action client called "move_base" with action definition file "MoveBaseAction"
     client = actionlib.SimpleActionClient('/robot_1/move_base/',MoveBaseAction)

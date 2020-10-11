@@ -13,6 +13,8 @@ from multiprocessing import Process
 from multiprocessing.pool import ThreadPool as Pool
 from geometry_msgs.msg import Pose
 
+import thread
+
 import argparse
 
 def gms_client(model_name,relative_entity_name):
@@ -25,10 +27,11 @@ def gms_client(model_name,relative_entity_name):
         print "Service call failed: %s"%e
 
 def pose_publisher_func(i, res):
+
     pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=0)
     pose_msg = ModelState()
     pose_msg.model_name = 'person{}'.format(i)
-    rate = rospy.Rate(30)
+    rate = rospy.Rate(50)
     name = i
 
     change_pose = Pose()
@@ -43,116 +46,111 @@ def pose_publisher_func(i, res):
     while not rospy.is_shutdown():
         print(pose_msg.model_name)
 
-        if int(name) < 5:
-          print("Horizontal")
+        if int(name) < 15:
           if abs(theta) > 3:
-            while pose_msg.pose.position.y < 10:
-              pose_msg.pose.position.y += 4./100
+            while pose_msg.pose.position.y < ymax:
+              pose_msg.pose.position.y += 10./100
               pub.publish(pose_msg)
               rate.sleep()
 
             theta = 0.0
             quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
-            pose_msg.pose.orientation = quaternion
-            # pose_msg.pose.orientation.x = quaternion[0]
-            # pose_msg.pose.orientation.y = quaternion[1]
-            # pose_msg.pose.orientation.z = quaternion[2]
-            # pose_msg.pose.orientation.w = quaternion[3]
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
-            while pose_msg.pose.position.y > -10:
-              pose_msg.pose.position.y -= 4./100
+            while pose_msg.pose.position.y > -ymax:
+              pose_msg.pose.position.y -= 10./100
               pub.publish(pose_msg)
               rate.sleep()
 
-            theta = -np.pi
+            theta = (np.pi)
             quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
-            pose_msg.pose.orientation = quaternion
-            # pose_msg.pose.orientation.x = quaternion[0]
-            # pose_msg.pose.orientation.y = quaternion[1]
-            # pose_msg.pose.orientation.z = quaternion[2]
-            # pose_msg.pose.orientation.w = quaternion[3]
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
           else:
-            while pose_msg.pose.position.y > -10:
-              pose_msg.pose.position.y -= 4./100
+            while pose_msg.pose.position.y > -ymax:
+              pose_msg.pose.position.y -= 10./100
               pub.publish(pose_msg)
               rate.sleep()
 
-            theta = -np.pi
+            theta = -(np.pi)
             quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
-            pose_msg.pose.orientation = quaternion
-            # pose_msg.pose.orientation.x = quaternion[0]
-            # pose_msg.pose.orientation.y = quaternion[1]
-            # pose_msg.pose.orientation.z = quaternion[2]
-            # pose_msg.pose.orientation.w = quaternion[3]
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
-            while pose_msg.pose.position.y < 10:
-              pose_msg.pose.position.y += 4./100
+            while pose_msg.pose.position.y < ymax:
+              pose_msg.pose.position.y += 10./100
               pub.publish(pose_msg)
               rate.sleep()
 
-            theta = 0
+            theta = 0.0
             quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
-            pose_msg.pose.orientation = quaternion
-            # pose_msg.pose.orientation.x = quaternion[0]
-            # pose_msg.pose.orientation.y = quaternion[1]
-            # pose_msg.pose.orientation.z = quaternion[2]
-            # pose_msg.pose.orientation.w = quaternion[3]
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
         else:
-          print("Vertical!")
-          print(theta)
           if theta > 0:
-            print("Howww!")
-            while pose_msg.pose.position.x < 10:
-              pose_msg.pose.position.x += 4./100
+            while pose_msg.pose.position.x < xmax:
+              pose_msg.pose.position.x += 10./100
               pub.publish(pose_msg)
               rate.sleep()
 
             theta = -(np.pi/2)
             quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
-            pose_msg.pose.orientation = quaternion
-            # pose_msg.pose.orientation.x = quaternion[0]
-            # pose_msg.pose.orientation.y = quaternion[1]
-            # pose_msg.pose.orientation.z = quaternion[2]
-            # pose_msg.pose.orientation.w = quaternion[3]
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
-            while pose_msg.pose.position.x > -10 :
-              pose_msg.pose.position.x -= 4./100
+            while pose_msg.pose.position.x > -xmax:
+              pose_msg.pose.position.x -= 10./100
               pub.publish(pose_msg)
               rate.sleep()
             theta = (np.pi/2)
-            pose_msg.pose.orientation = tf.transformations.quaternion_from_euler(roll,pitch,theta)
+            quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
           else:
-            print("Pretty sure")
-            while pose_msg.pose.position.x > -10:
-              pose_msg.pose.position.x -= 4./100
+            while pose_msg.pose.position.x > -xmax:
+              pose_msg.pose.position.x -= 10./100
               pub.publish(pose_msg)
               rate.sleep()
 
             theta = (np.pi/2)
             quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
-            pose_msg.pose.orientation = quaternion
-            # pose_msg.pose.orientation.x = quaternion[0]
-            # pose_msg.pose.orientation.y = quaternion[1]
-            # pose_msg.pose.orientation.z = quaternion[2]
-            # pose_msg.pose.orientation.w = quaternion[3]
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
-            while pose_msg.pose.position.x < 10:
-              pose_msg.pose.position.x += 4./100
+            while pose_msg.pose.position.x < xmax:
+              pose_msg.pose.position.x += 10./100
               pub.publish(pose_msg)
               rate.sleep()
 
             theta = -(np.pi/2)
             quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta)
-            pose_msg.pose.orientation = quaternion
-            # pose_msg.pose.orientation.x = quaternion[0]
-            # pose_msg.pose.orientation.y = quaternion[1]
-            # pose_msg.pose.orientation.z = quaternion[2]
-            # pose_msg.pose.orientation.w = quaternion[3]
+            pose_msg.pose.orientation.x = quaternion[0]
+            pose_msg.pose.orientation.y = quaternion[1]
+            pose_msg.pose.orientation.z = quaternion[2]
+            pose_msg.pose.orientation.w = quaternion[3]
 
 if __name__ == '__main__':
+
+      xmax = 22
+      ymax = 17
 
       parser = argparse.ArgumentParser()
       parser.add_argument("--per")
@@ -170,6 +168,7 @@ if __name__ == '__main__':
 
       try:
         res = gms_client("person{}".format(per_num), "link")
+        # thread.start_new_thread( pose_publisher_func, (per_num, res, ) )
         pose_publisher_func(per_num, res)
 
 
