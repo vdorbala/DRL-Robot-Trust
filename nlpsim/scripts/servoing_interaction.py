@@ -46,18 +46,20 @@ class image_converter:
     (self.height, self.width, channels) = cv_image.shape
 
     # mask = cv2.inRange(cv_image, (30,30,30), (35,35,35))
-    # cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
     
-    mask1 = cv2.inRange(cv_image, (70,70,20), (80,80,30)) # 1. (76, 76, 25)/ (60, 67.1, 29.8)
-    mask2 = cv2.inRange(cv_image, (148,168,28), (157,175,38))# 2. (153, 172, 34)/ (68, 80.2, 67.5)
-    mask3 = cv2.inRange(cv_image, (28,95,93), (38,107,101)) # 3. (97, 101, 32)/(63,68.3,39.6)
-    mask4 = cv2.inRange(cv_image, (96,100,30), (98,102,33))
+    mask1 = cv2.inRange(cv_image, (21,10,5), (180,255,255)) # 1. (76, 76, 25)/ (60, 67.1, 29.8)
+    mask2 = cv2.inRange(cv_image,  (19,33,28), (180,255,255))# 2. (153, 172, 34)/ (68, 80.2, 67.5)
+    mask3 = cv2.inRange(cv_image, (27,27,27), (180,255,255)) # 3. (97, 101, 32)/(63,68.3,39.6)
+    # mask4 = cv2.inRange(cv_image, (96,100,30), (98,102,33))
 
     masks = [mask1, mask2, mask3]
 
     mask = cv2.bitwise_or(mask1, mask2, mask1)
 
     cv_image = cv2.bitwise_and(cv_image, cv_image, mask=mask4)
+    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_HSV2BGR)
+
 
     cv2.imshow("Image window", cv_image)
     cv2.waitKey(3)
