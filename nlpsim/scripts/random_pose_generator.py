@@ -66,12 +66,12 @@ def spawn():
 
 		# spawn = subprocess.Popen("rosrun gazebo_ros spawn_model -database person_standing -sdf -model person{} -y {} -x {} -Y {}".format(i, xvalsh[i-1], yvalsh[i-1], yawval[i-1] ),stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
 
-		spawn = subprocess.Popen("rosrun gazebo_ros spawn_model -database human_cuboid -sdf -model person{} -x {} -y {} -Y {}".format(i, xvalsh[i-1], yvalsh[i-1], yawvalh[i-1]),stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
+		spawn = subprocess.Popen("rosrun gazebo_ros spawn_model -database yellow_human -sdf -model person{} -x {} -y {} -Y {}".format(i, xvalsh[i-1], yvalsh[i-1], yawvalh[i-1]),stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
 
 	print("Got {} humans horizontally!".format(i-1))
 	# Vertical
 	for i in range(row_split, row_split + column_split):
-		spawn = subprocess.Popen("rosrun gazebo_ros spawn_model -database human_cuboid -sdf -model person{} -x {} -y {} -Y {}".format(i, xvalsv[i-row_split], yvalsv[i-row_split], yawvalv[i-row_split]),stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
+		spawn = subprocess.Popen("rosrun gazebo_ros spawn_model -database yellow_human -sdf -model person{} -x {} -y {} -Y {}".format(i, xvalsv[i-row_split], yvalsv[i-row_split], yawvalv[i-row_split]),stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
 
 	print("Got {} humans vertically!".format(i-row_split-1))
 
@@ -105,9 +105,9 @@ if __name__ == '__main__':
 	
 	rospy.init_node("random_spawn")
 
-	hum_hor = 3
+	hum_hor = 2
 
-	hum_ver = 3
+	hum_ver = 2
 
 	width = 6 # Take 5
 

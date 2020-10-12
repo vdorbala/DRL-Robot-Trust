@@ -14,8 +14,12 @@ import numpy as np
 import send_goal
 from std_srvs.srv import Empty
 
+from gazebo_msgs.msg import ModelState
+from gazebo_msgs.srv import *
 
-class image_converter:
+import matplotlib.pyplot as plt
+
+class cogmod:
 
   def __init__(self):
     self.image_pub = rospy.Publisher("/detected_human", Image, queue_size = 10)
@@ -37,6 +41,8 @@ class image_converter:
     self.height = 480
     self.width = 640
 
+    self.cogval = True
+
   def callback(self,data):
     try:
       cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -51,18 +57,16 @@ class image_converter:
     mask1 = cv2.inRange(cv_image, (21,10,5), (180,255,255)) # 1. (76, 76, 25)/ (60, 67.1, 29.8)
     mask2 = cv2.inRange(cv_image,  (19,33,28), (180,255,255))# 2. (153, 172, 34)/ (68, 80.2, 67.5)
     mask3 = cv2.inRange(cv_image, (27,27,27), (180,255,255)) # 3. (97, 101, 32)/(63,68.3,39.6)
-    # mask4 = cv2.inRange(cv_image, (96,100,30), (98,102,33))
 
     masks = [mask1, mask2, mask3]
 
     mask = cv2.bitwise_or(mask1, mask2, mask1)
 
-    cv_image = cv2.bitwise_and(cv_image, cv_image, mask=mask4)
+    cv_image = cv2.bitwise_and(cv_image, cv_image, mask=mask)
     cv_image = cv2.cvtColor(cv_image, cv2.COLOR_HSV2BGR)
 
-
-    cv2.imshow("Image window", cv_image)
-    cv2.waitKey(3)
+    # plt.imshow(cv2.cvtColor(cv_image, cv2.COLOR_HSV2RGB))
+    # plt.pause(10)
 
     gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
@@ -82,27 +86,33 @@ class image_converter:
     x_des = (self.width/2)
     y_des = (self.height/2)
 
-    if self.x_centroid!=0.0:
-        error = (x_des - self.x_centroid)
+    error = (x_des - self.x_centroid)
 
-    else:
-        return
+    # if self.x_centroid!=0.0:
+    #     error = (x_des - self.x_centroid)
+
+    # else:
+    #     return
 
     print("Servoing error is {}, and depth value is {}".format(error, self.depval))
 
     vel_msg = Twist()
 
     if self.cognitive():
-        while (abs(error)<100):
-            if (self.depval<1.5):
-                print("Sending servoing command!")
+        while (abs(error)<100) and (self.depval<3):
+                # print("Sending servoing command!")
                 vel_msg.linear.x = 0.5
-                vel_msg.angular.z = error*0.05
+                vel_msg.angular.z = -error*0.05
                 self.vel_pub.publish(vel_msg)
                 # result = send_goal.movebase_client(0,0,0)
                 # pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-                if result:
-                    rospy.loginfo("Detected human and stopped!")
+                # if result:
+                #     rospy.loginfo("Detected human and stopped!")
+
+                if (self.depval>0.5):
+                  print("Ready to receive information!")
+                  self.cogval = False
+                  break
 
     try:
       self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
@@ -123,16 +133,21 @@ class image_converter:
 
 
   def cognitive(self):
-    return True
 
-def main(args):
-  ic = image_converter()
-  rospy.init_node('image_converter', anonymous=True)
-  try:
-    rospy.spin()
-  except KeyboardInterrupt:
-    print("Shutting down")
-  cv2.destroyAllWindows()
+    return self.cogval
 
 if __name__ == '__main__':
-    main(sys.argv)
+  cog = cogmod()
+  rospy.init_node('cognition_module', anonymous=True)
+
+  switch_pub = rospy.Publisher("/switcher", String, queue_size = 10)
+
+  if cog.cognitive():
+    try:
+      rospy.spin()
+    except KeyboardInterrupt:
+      print("Shutting down")
+    cv2.destroyAllWindows()
+
+  else:
+    switch_pub.publish("Ready")

@@ -8,7 +8,7 @@ from pathplan import astar
 
 import rospy
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Header
+from std_msgs.msg import Header, String
 from gazebo_msgs.srv import GetModelState, GetModelStateRequest
 import numpy as np
 import tf
@@ -93,6 +93,7 @@ def goalprob(pos,maze):
         p.append((pos[0]-1,pos[1]+1))
     # p.append(pos)
     return p
+
 def gms_client(model_name,relative_entity_name):
     rospy.wait_for_service('/gazebo/get_model_state')
     try:
@@ -101,6 +102,7 @@ def gms_client(model_name,relative_entity_name):
         return resp1
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
+
 def predmaxprobgoal(pos,maze):
     y=maxprobgoal(pos)
     p=goalprob(pos,maze)
@@ -116,9 +118,9 @@ def command(path,i_ori):
     command=""
     prev=front[path[1][0]-path[0][0]]+side[path[1][1]-path[0][1]]
     if(i_ori !=prev):
-        command+=Dict[i_ori][prev]
+        command= command + Dict[i_ori][prev]
     else:
-        command+="S"
+        command= command + "S"
     for i in range(len(path)-1):
         dir=front[path[i+1][0]-path[i][0]]+side[path[i+1][1]-path[i][1]]
         # print("present ",dir)
@@ -160,11 +162,15 @@ def main():
 
     rospy.init_node('odom_pub')
     pr=1
+    sym_pub = rospy.Publisher('/symbols', String, queue_size=0)
     while not rospy.is_shutdown():
-        res = gms_client("turtlebot3_burger", "")
+        res = gms_client("robot_1", "link")
 
+        if res==None:
+            continue
         x = np.round(res.pose.position.x,3)
-        y= np.round(res.pose.position.y,3)
+        y = np.round(res.pose.position.y,3)
+
         euler = tf.transformations.euler_from_quaternion((res.pose.orientation.x,res.pose.orientation.y,res.pose.orientation.z,res.pose.orientation.w))
         yaw=np.round(euler[2],3)
         gazebo_start=[x,y]
@@ -177,33 +183,43 @@ def main():
         maxgoal=predmaxprobgoal(endnode,maze)
         nonrepgoal={}
         count=1
+
+        if probgoal == None:
+            continue
+        
         for i in probgoal:
             path = astar(maze, startnode, i)
             # print("path",path)
             # print(command(path,i_ori))
             nonrepgoal[cutu(command(path,i_ori))] = count
             count+=1
-        if(pr%100==0):
-            print("probable no of goal points surrounding it is ",len(probgoal))
-            print("start node asscoiation",startnode)
-            print("end node asscoiation",endnode)
-            print(x,y,yaw)
-            for i in nonrepgoal:
-                print(i)
+        # if(pr%100==0):
+        #     # print("probable no of goal points surrounding it is ",len(probgoal))
+        #     # print("start node asscoiation",startnode)
+        #     # print("end node asscoiation",endnode)
+        #     # print(x,y,yaw)
+        #     for i in nonrepgoal:
+        #         print(i)
+
         count=1
         pr+=1
-        # maxrepgoal={}
-        # for i in maxgoal:
-        #     path = astar(maze, startnode, i)
-        #     print("path",path)
-        #     # print(command(path,i_ori))
-        #     maxrepgoal[cutu(command(path,i_ori))] = count
-        #     count+=1
-        # for i in maxrepgoal:
-        #     print("max prob path is",i)
+        maxrepgoal={}
+        for i in maxgoal:
+            path = astar(maze, startnode, i)
+            # print("path",path)
+            # print(command(path,i_ori))
+            maxrepgoal[cutu(command(path,i_ori))] = count
+            count+=1
+        goal=None
+        for i in maxrepgoal:
+            goal=i
+            break
+        print("sending goal {}".format(goal))
+        sym_pub.publish(str(goal))
+        
 
 
 
 if __name__ == '__main__':
-                    main()
+    main()
 

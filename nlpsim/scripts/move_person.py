@@ -31,7 +31,7 @@ def pose_publisher_func(i, res):
     pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=0)
     pose_msg = ModelState()
     pose_msg.model_name = 'person{}'.format(i)
-    rate = rospy.Rate(50)
+    rate = rospy.Rate(30)
     name = i
 
     change_pose = Pose()
@@ -46,10 +46,10 @@ def pose_publisher_func(i, res):
     while not rospy.is_shutdown():
         print(pose_msg.model_name)
 
-        if int(name) < 15:
+        if int(name) < NUM_HORI:
           if abs(theta) > 3:
             while pose_msg.pose.position.y < ymax:
-              pose_msg.pose.position.y += 10./100
+              pose_msg.pose.position.y += 4./100
               pub.publish(pose_msg)
               rate.sleep()
 
@@ -61,7 +61,7 @@ def pose_publisher_func(i, res):
             pose_msg.pose.orientation.w = quaternion[3]
 
             while pose_msg.pose.position.y > -ymax:
-              pose_msg.pose.position.y -= 10./100
+              pose_msg.pose.position.y -= 4./100
               pub.publish(pose_msg)
               rate.sleep()
 
@@ -74,7 +74,7 @@ def pose_publisher_func(i, res):
 
           else:
             while pose_msg.pose.position.y > -ymax:
-              pose_msg.pose.position.y -= 10./100
+              pose_msg.pose.position.y -= 4./100
               pub.publish(pose_msg)
               rate.sleep()
 
@@ -86,7 +86,7 @@ def pose_publisher_func(i, res):
             pose_msg.pose.orientation.w = quaternion[3]
 
             while pose_msg.pose.position.y < ymax:
-              pose_msg.pose.position.y += 10./100
+              pose_msg.pose.position.y += 4./100
               pub.publish(pose_msg)
               rate.sleep()
 
@@ -100,7 +100,7 @@ def pose_publisher_func(i, res):
         else:
           if theta > 0:
             while pose_msg.pose.position.x < xmax:
-              pose_msg.pose.position.x += 10./100
+              pose_msg.pose.position.x += 4./100
               pub.publish(pose_msg)
               rate.sleep()
 
@@ -112,7 +112,7 @@ def pose_publisher_func(i, res):
             pose_msg.pose.orientation.w = quaternion[3]
 
             while pose_msg.pose.position.x > -xmax:
-              pose_msg.pose.position.x -= 10./100
+              pose_msg.pose.position.x -= 4./100
               pub.publish(pose_msg)
               rate.sleep()
             theta = (np.pi/2)
@@ -124,7 +124,7 @@ def pose_publisher_func(i, res):
 
           else:
             while pose_msg.pose.position.x > -xmax:
-              pose_msg.pose.position.x -= 10./100
+              pose_msg.pose.position.x -= 4./100
               pub.publish(pose_msg)
               rate.sleep()
 
@@ -136,7 +136,7 @@ def pose_publisher_func(i, res):
             pose_msg.pose.orientation.w = quaternion[3]
 
             while pose_msg.pose.position.x < xmax:
-              pose_msg.pose.position.x += 10./100
+              pose_msg.pose.position.x += 4./100
               pub.publish(pose_msg)
               rate.sleep()
 
@@ -151,6 +151,8 @@ if __name__ == '__main__':
 
       xmax = 22
       ymax = 17
+
+      NUM_HORI = 10
 
       parser = argparse.ArgumentParser()
       parser.add_argument("--per")

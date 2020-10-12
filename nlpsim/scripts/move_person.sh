@@ -22,17 +22,17 @@ python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 19 &
 python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 20 &
 python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 21 &
 python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 22 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 23 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 24 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 25 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 26 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 27 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 28 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 29 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 30 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 31 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 32 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 33 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 34 &
-python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 35 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 23 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 24 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 25 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 26 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 27 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 28 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 29 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 30 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 31 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 32 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 33 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 34 &
+# python /home/vdorbala/catkin_ws/src/nlpsim/scripts/move_person.py --per 35 &
 wait
