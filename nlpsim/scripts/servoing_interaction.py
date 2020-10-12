@@ -1,169 +1,136 @@
 #!/usr/bin/env python
-from __future__ import division
+from __future__ import print_function
+import sys
 import rospy
 import cv2
-import numpy as np
-import re
-from scipy.spatial import distance
 
-from nav_msgs.msg import Odometry
+from std_msgs.msg import String
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+from geometry_msgs.msg import Twist
 
-from nlpsim.msg import Peoplepose
-
-from yolov3_pytorch_ros.msg import BoundingBoxes, BoundingBox
+from cv_bridge import CvBridge, CvBridgeError
+import numpy as np
 
 import send_goal
 from std_srvs.srv import Empty
 
 
+class image_converter:
 
-class objectdetectclass(object):
-    def __init__(self):
-    # save the subscriber object to a class member
-        self.sub = rospy.Subscriber("/detected_objects_in_image", BoundingBoxes, self.callback, queue_size=20)
-        self.pose = []
-        self.objclass = ""
-        self.probability = 0.0
+  def __init__(self):
+    self.image_pub = rospy.Publisher("/detected_human", Image, queue_size = 10)
+    self.vel_pub = rospy.Publisher("/robot_1/mobile_base/commands/velocity", Twist, queue_size = 10)
 
-        self.area = 0.0
-        self.box = BoundingBoxes()
+    self.bridge = CvBridge()
+    self.image_sub = rospy.Subscriber("/robot_1/camera/rgb/image_raw", Image, self.callback)
+    self.depth_sub = rospy.Subscriber("/robot_1/camera/depth/image_raw", Image, self.depth_callback)
 
-    def callback(self,data):
-        if data.bounding_boxes:
-            self.box = data.bounding_boxes[0]
+    self.centroid = np.zeros(2)
+    self.x_centroid = 0.0
+    self.y_centroid = 0.0
 
-        else:
-            return 0
+    self.centroid[0] = self.x_centroid
+    self.centroid[1] = self.y_centroid
 
-        self.objclass = self.box.Class
+    self.depval = "None"
 
-        self.probability = self.box.probability
+    self.height = 480
+    self.width = 640
 
-        self.area = (self.box.xmax - self.box.xmin)*(self.box.ymax - self.box.ymin)
+  def callback(self,data):
+    try:
+      cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+    except CvBridgeError as e:
+      print(e)
 
-    def human_detect(self):
-        if (self.objclass=="person"):
-            return (self.box)
+    (self.height, self.width, channels) = cv_image.shape
 
-    def unsubscribe(self):
-    # use the saved subscriber object to unregister the subscriber
-        self.sub.unregister()
-
-
-
-
-class people_detect(object):
+    # mask = cv2.inRange(cv_image, (30,30,30), (35,35,35))
+    # cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
     
-    def __init__(self):
-        self.depth_sub = rospy.Subscriber("/robot_1/camera/depth/image_raw", Image, self.depth_callback, queue_size=20)
-        self.image_sub = rospy.Subscriber("/robot_1/camera/rgb/image_raw", Image, self.rgb_callback, queue_size=20)
+    mask1 = cv2.inRange(cv_image, (70,70,20), (80,80,30)) # 1. (76, 76, 25)/ (60, 67.1, 29.8)
+    mask2 = cv2.inRange(cv_image, (148,168,28), (157,175,38))# 2. (153, 172, 34)/ (68, 80.2, 67.5)
+    mask3 = cv2.inRange(cv_image, (28,95,93), (38,107,101)) # 3. (97, 101, 32)/(63,68.3,39.6)
+    mask4 = cv2.inRange(cv_image, (96,100,30), (98,102,33))
 
-    def depth_callback(self, data):
-        return data
+    masks = [mask1, mask2, mask3]
 
-    def rgb_callback(self, data):
-        return data
-        
-    def unsubscribe(self):
-    # use the saved subscriber object to unregister the subscriber
-        self.depth_sub.unregister()
-        self.image_sub.unregister()
+    mask = cv2.bitwise_or(mask1, mask2, mask1)
+
+    cv_image = cv2.bitwise_and(cv_image, cv_image, mask=mask4)
+
+    cv2.imshow("Image window", cv_image)
+    cv2.waitKey(3)
+
+    gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+
+    _,contours,h = cv2.findContours(gray,1,2)
+
+    for cnt in contours:
+        approx = cv2.approxPolyDP(cnt,0.03*cv2.arcLength(cnt,True),True)
+        area = cv2.contourArea(cnt)
+        if (len(approx)==5 or len(approx)==4) and area>30000:
+            approx = np.squeeze(approx)
+            print ("Found human!")
+            self.x_centroid = (np.sum(approx[:,0]))/len(approx)
+            y_centroid = (np.sum(approx[:,1]))/len(approx)
+            cv2.drawContours(cv_image,[cnt],0,255,-1)
 
 
-class cube_detect():
+    x_des = (self.width/2)
+    y_des = (self.height/2)
 
-    def __init__(self):
-        self.depth_sub = rospy.Subscriber("/robot_1/camera/depth/image_raw", Image, self.depth_callback, queue_size=20)
-        self.image_sub = rospy.Subscriber("/robot_1/camera/rgb/image_raw", Image, self.rgb_callback, queue_size=20)
+    if self.x_centroid!=0.0:
+        error = (x_des - self.x_centroid)
 
-    def depth_callback(self, data):
-        bridge = CvBridge()
-        cv_image = bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
+    else:
+        return
 
-        return data
+    print("Servoing error is {}, and depth value is {}".format(error, self.depval))
 
-    def rgb_callback(self, data):
+    vel_msg = Twist()
 
-        bridge = CvBridge()
-        img = bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if self.cognitive():
+        while (abs(error)<100):
+            if (self.depval<1.5):
+                print("Sending servoing command!")
+                vel_msg.linear.x = 0.5
+                vel_msg.angular.z = error*0.05
+                self.vel_pub.publish(vel_msg)
+                # result = send_goal.movebase_client(0,0,0)
+                # pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
+                if result:
+                    rospy.loginfo("Detected human and stopped!")
 
-        ret,thresh = cv2.threshold(gray,127,255,1)
+    try:
+      self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+    except CvBridgeError as e:
+      print(e)
 
-        contours,h = cv2.findContours(thresh,1,2)
 
-        for cnt in contours:
-            approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
-            print len(approx)
-            if len(approx)==5:
-                print "pentagon"
-                cv2.drawContours(img,[cnt],0,255,-1)
-            elif len(approx)==3:
-                print "triangle"
-                cv2.drawContours(img,[cnt],0,(0,255,0),-1)
-            elif len(approx)==4:
-                print "square"
-                cv2.drawContours(img,[cnt],0,(0,0,255),-1)
-            elif len(approx) == 9:
-                print "half-circle"
-                cv2.drawContours(img,[cnt],0,(255,255,0),-1)
-            elif len(approx) > 15:
-                print "circle"
-                cv2.drawContours(img,[cnt],0,(0,255,255),-1)
+  def depth_callback(self, data):
 
-        cv2.imshow('img',img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+      depth_image = self.bridge.imgmsg_to_cv2(data, "passthrough")
 
-        print(cnt)
-        
-        return data
-        
-    def unsubscribe(self):
-    # use the saved subscriber object to unregister the subscriber
-        self.depth_sub.unregister()
-        self.image_sub.unregister()
+      depth_image = np.array(depth_image)
 
-def track_and_move():
+      x_depth = self.centroid[0]
+      y_depth = self.centroid[1]
 
-    while not rospy.is_shutdown():
+      self.depval = float(depth_image[int(self.centroid[1]), int(self.centroid[0])]) 
 
-        box = BoundingBoxes()
 
-        detect = cube_detect()
-        # human = people_detect()
-        # detect = objectdetectclass()
+  def cognitive(self):
+    return True
 
-        while not detect.rgb_callback():
-            continue
-
-        # box = detect.rgb_callback()
-
-        # xmax = box.xmax
-        # ymax = box.ymax
-        # xmin = box.xmin
-        # ymin = box.ymin
-
-        # center_point = [(xmax - xmin)/2, (ymax - ymin)/2]
-
-        # x_coord = center_point[0]
-
-        # print("Sending stop command!")
-        # result = send_goal.movebase_client(0,0,0)
-        # pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-        # if result:
-        #     rospy.loginfo("Detected human and stopped!")
-
-        # if x_coord<(image_hor_dim/2):
-        #     pass
-        # else:
-        #     pass
-
+def main(args):
+  ic = image_converter()
+  rospy.init_node('image_converter', anonymous=True)
+  try:
+    rospy.spin()
+  except KeyboardInterrupt:
+    print("Shutting down")
+  cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-
-    rospy.init_node('servoing_interaction')
-
-    track_and_move()
+    main(sys.argv)
