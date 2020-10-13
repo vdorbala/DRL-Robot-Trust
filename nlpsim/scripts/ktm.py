@@ -26,8 +26,13 @@ side= defaultdict(def_value)
 side[1]="R"
 side[-1]="L"
 
-Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D":"L"}, "R": {"L":"D","R":"U","U":"L","D":"R"},"D":{"L":"R","R":"L","U":"D","D":"U"}} 
-
+# Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D":"L"}, "R": {"L":"D","R":"U","U":"L","D":"R"},"D":{"L":"R","R":"L","U":"D","D":"U"}} 
+Dict=defaultdict(def_value)
+# Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D":"L"}, "R": {"L":"D","R":"U","U":"L","D":"R"},"D":{"L":"R","R":"L","U":"D","D":"U"}} 
+Dict["U"]= {"L":"L","R":"R","U":"U","D":"D"}
+Dict["L"]= {"L":"U","R":"D","U":"R","D":"L"} 
+Dict["R"]= {"L":"D","R":"U","U":"L","D":"R"}
+Dict["D"]={"L":"R","R":"L","U":"D","D":"U"}
 
 def inter(x):
     a=False
@@ -146,7 +151,7 @@ def cutu(path):
 
 def approx_dir(yaw):
     a=""
-    if(0<yaw<0.78 or -0.78<yaw<0):
+    if(0<yaw<0.78 or -0.78<yaw<=0):
         a="R"
     if(0.78<= yaw  and yaw<=2.35):
         a="U"
