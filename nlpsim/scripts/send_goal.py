@@ -17,8 +17,9 @@ def movebase_client(x = random.uniform(-22, 22), y = random.uniform(-17, 17), w 
     # Waits until the action server has started up and started listening for goals.
     client.wait_for_server()
 
-    # print("Sending goal values, {}, {}, {}".format(x,y,w))
+    print("Sending goal values, {}, {}, {}".format(x,y,w))
     if x == 0 and y == 0 and w == 0:
+      print("Cancelling goals!")
       client.cancel_all_goals()
       return
 

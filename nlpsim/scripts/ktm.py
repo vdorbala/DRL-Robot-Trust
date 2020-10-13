@@ -12,9 +12,8 @@ from std_msgs.msg import Header, String
 from gazebo_msgs.srv import GetModelState, GetModelStateRequest
 import numpy as np
 import tf
-from maze import maze
-from maze import m2g
-from maze import gazebo
+from maze import maze, m2g, gazebo
+import random
 
 
 def def_value(): 
@@ -26,13 +25,8 @@ side= defaultdict(def_value)
 side[1]="R"
 side[-1]="L"
 
-# Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D":"L"}, "R": {"L":"D","R":"U","U":"L","D":"R"},"D":{"L":"R","R":"L","U":"D","D":"U"}} 
-Dict=defaultdict(def_value)
-# Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D":"L"}, "R": {"L":"D","R":"U","U":"L","D":"R"},"D":{"L":"R","R":"L","U":"D","D":"U"}} 
-Dict["U"]= {"L":"L","R":"R","U":"U","D":"D"}
-Dict["L"]= {"L":"U","R":"D","U":"R","D":"L"} 
-Dict["R"]= {"L":"D","R":"U","U":"L","D":"R"}
-Dict["D"]={"L":"R","R":"L","U":"D","D":"U"}
+Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D":"L"}, "R": {"L":"D","R":"U","U":"L","D":"R"},"D":{"L":"R","R":"L","U":"D","D":"U"}} 
+
 
 def inter(x):
     a=False
@@ -61,6 +55,8 @@ def interpos(pos,gazebo,m2g):
 def interposend(pos,gazebo,m2g):
     inters = 1
     for i in gazebo:
+        # print(pos)
+        # print(gazebo[inters])
         if(distance(pos,gazebo[inters])>distance(pos,gazebo[i])):
             inters=i
     
@@ -121,6 +117,9 @@ def predmaxprobgoal(pos,maze):
 
 def command(path,i_ori):
     command=""
+    # print(path)
+    if(len(path))<2:
+        return command
     prev=front[path[1][0]-path[0][0]]+side[path[1][1]-path[0][1]]
     if(i_ori !=prev):
         command= command + Dict[i_ori][prev]
@@ -163,68 +162,84 @@ def approx_dir(yaw):
 
 
 
-def main():
-
-    rospy.init_node('odom_pub')
+def main(END_GOAL, res):
     pr=1
-    sym_pub = rospy.Publisher('/symbols', String, queue_size=0)
-    while not rospy.is_shutdown():
-        res = gms_client("robot_1", "link")
+    global reset
 
-        if res==None:
-            continue
-        x = np.round(res.pose.position.x,3)
-        y = np.round(res.pose.position.y,3)
+    if res==None:
+        return
+    x = np.round(res.pose.position.x,3)
+    y = np.round(res.pose.position.y,3)
 
-        euler = tf.transformations.euler_from_quaternion((res.pose.orientation.x,res.pose.orientation.y,res.pose.orientation.z,res.pose.orientation.w))
-        yaw=np.round(euler[2],3)
-        gazebo_start=[x,y]
-        gazebo_end=[-20,14]
-        startnode=tuple(m2g[interpos(gazebo_start,gazebo,m2g)])#not a room 
-        endnode=tuple(m2g[interposend(gazebo_end,gazebo,m2g)])#mostly a room
+    euler = tf.transformations.euler_from_quaternion((res.pose.orientation.x,res.pose.orientation.y,res.pose.orientation.z,res.pose.orientation.w))
+    yaw=np.round(euler[2],3)
+    gazebo_start=[x,y]
+    gazebo_end=END_GOAL
+    startnode=tuple(m2g[interpos(gazebo_start,gazebo,m2g)])#not a room 
+    endnode=tuple(m2g[interposend(gazebo_end,gazebo,m2g)])#mostly a room
+    i_ori=approx_dir(yaw)#initial orientation
+    probgoal=goalprob(endnode,maze)
+    maxgoal=predmaxprobgoal(endnode,maze)
+    nonrepgoal={}
+    count=1
 
-        i_ori=approx_dir(yaw)#initial orientation
-        probgoal=goalprob(endnode,maze)
-        maxgoal=predmaxprobgoal(endnode,maze)
-        nonrepgoal={}
-        count=1
+    if probgoal == None:
+        return
+    for i in probgoal:
+        if(notroom(i)):
+          path = astar(maze, startnode, i)
 
-        if probgoal == None:
-            continue
-        
-        for i in probgoal:
-            path = astar(maze, startnode, i)
-            # print("path",path)
-            # print(command(path,i_ori))
-            nonrepgoal[cutu(command(path,i_ori))] = count
-            count+=1
-        # if(pr%100==0):
-        #     # print("probable no of goal points surrounding it is ",len(probgoal))
-        #     # print("start node asscoiation",startnode)
-        #     # print("end node asscoiation",endnode)
-        #     # print(x,y,yaw)
-        #     for i in nonrepgoal:
-        #         print(i)
-
-        count=1
-        pr+=1
-        maxrepgoal={}
-        for i in maxgoal:
+        # print("path",path)
+        # print(command(path,i_ori))
+          nonrepgoal[cutu(command(path,i_ori))] = count
+          count+=1
+    # if(pr%100==0):
+    #     # print("probable no of goal points surrounding it is ",len(probgoal))
+    #     # print("start node asscoiation",startnode)
+    #     # print("end node asscoiation",endnode)
+    #     # print(x,y,yaw)
+    #     for i in nonrepgoal:
+    #         print(i)
+    count=1
+    pr+=1
+    maxrepgoal={}
+    for i in maxgoal:
+        if(notroom(i)):
             path = astar(maze, startnode, i)
             # print("path",path)
             # print(command(path,i_ori))
             maxrepgoal[cutu(command(path,i_ori))] = count
             count+=1
-        goal=None
-        for i in maxrepgoal:
-            goal=i
-            break
-        print("sending goal {}".format(goal))
-        sym_pub.publish(str(goal))
-        
+    goal=None
+    for i in maxrepgoal:
+        goal=i
+        break
+    sym_pub.publish(str(goal))
 
-
+    # if rospy.has_param('goal_reached'):
+    #     reset = rospy.get_param("goal_reached")
+    #     return
 
 if __name__ == '__main__':
-    main()
 
+        rospy.init_node("goal_sender")
+
+        rospy.set_param('goal_reached', True)
+
+        sym_pub = rospy.Publisher('/symbols', String, queue_size=0)
+
+        x_size = 22
+        y_size = 17
+
+        while not rospy.is_shutdown():
+            res = gms_client("robot_1", "link")
+
+            reset = rospy.get_param("goal_reached")
+            x = random.uniform(-x_size, x_size)
+            y = random.uniform(-y_size, y_size)
+
+            END_GOAL = [np.round(x,2), np.round(y,2)]
+            while reset:
+                print("Sending goal {}".format(END_GOAL))
+                main(END_GOAL, res)
+                rospy.set_param("goal_reached", False)

@@ -88,74 +88,6 @@ class detect_inter(object):
         self.sub.unregister()
 
 
-
-class symbolsubclass(object):
-    def __init__(self):
-    # save the subscriber object to a class member
-        self.sub = rospy.Subscriber("/symbols", String, self.callback, queue_size=20)
-        self.symbols = None
-
-    def callback(self,data):
-
-        self.symbols = data.data
-
-    def get_sym(self):
-            return self.symbols
-
-    def unsubscribe(self):
-    # use the saved subscriber object to unregister the subscriber
-        self.sub.unregister()
-
-
-class kt_switch(object):
-    def __init__(self):
-    # save the subscriber object to a class member
-        self.sub = rospy.Subscriber("/switcher", String, self.callback, queue_size=1)
-        self.req = None
-
-    def callback(self,data):
-        print(data)
-        self.req = data
-
-    def get_req(self):
-            return self.req
-
-    def unsubscribe(self):
-    # use the saved subscriber object to unregister the subscriber
-        self.sub.unregister()
-
-class robotposeclass(object):
-    def __init__(self):
-    # save the subscriber object to a class member
-        self.sub = rospy.Subscriber("/robot_1/odom", Odometry, self.callback, queue_size=20)
-        self.res = gms_client("robot_1", "link")
-        self.pose = Odometry()
-
-        x_gz = np.round(self.res.pose.position.x,3)
-        y_gz = np.round(self.res.pose.position.y,3)
-        w_gz = np.round(self.res.pose.orientation.w,3)
-
-        self.pose_gz = [x_gz, y_gz, w_gz]
-
-    def callback(self,data):
-
-
-        x = np.round(data.pose.pose.position.x,3)
-        y = np.round(data.pose.pose.position.y,3)
-        w = np.round(data.pose.pose.orientation.w,3)
-
-        self.pose = data
-        # self.pose = [x,y,w]
-
-    def getpose(self):
-            # return self.pose_gz
-            return self.pose
-
-    def unsubscribe(self):
-    # use the saved subscriber object to unregister the subscriber
-        self.sub.unregister()
-
-
 def gms_client(model_name,relative_entity_name):
     rospy.wait_for_service('/gazebo/get_model_state')
     try:
@@ -200,16 +132,6 @@ def move(pose_pub, vel_pub, cmd):
     sel_pos = [0.0, np.round(np.pi/2,3), np.round(-np.pi/2,3), np.round(np.pi,3)]
 
     if cmd == 'F' or cmd == 'U':
-        print(theta_init)
-        if abs(theta_init)<1:
-            sel_val = 0
-        elif np.isclose([-np.pi/2],[-np.pi/2+0.3], 0.3):
-            sel_val = 2
-        elif abs(theta_init)>3:
-            sel_val = 3
-        elif np.isclose([np.pi/2],[np.pi/2+0.3], 0.3):
-            sel_val = 1
-
         time_init = time.time()
         if not firstcom:
             while (time.time() - time_init)<5:
@@ -227,6 +149,25 @@ def move(pose_pub, vel_pub, cmd):
         init_orient = res.pose.orientation
         (roll,pitch,theta) = tf.transformations.euler_from_quaternion([init_orient.x,init_orient.y,init_orient.z,init_orient.w])
 
+        # if abs(theta_init)<1:
+        #     sel_val = 0
+        # elif (theta < -(np.pi/2)+0.4) and (theta > -(np.pi/2)-0.4):
+        #     sel_val = 2
+        # elif abs(theta_init)>3:
+        #     sel_val = 3
+        # elif (theta < (np.pi/2)+0.4) and (theta > (np.pi/2)-0.4):
+        #     sel_val = 1
+
+
+        if abs(theta)<=0.78:
+            sel_val = 3
+        elif (theta <= -0.78) and (theta > -2.35):
+            sel_val = 2
+        elif (theta > -2.35) and (theta >= 2.35):
+            sel_val = 0
+        elif (theta < 2.35) and (theta >= 0.78):
+            sel_val = 1
+
         theta_des = sel_pos[sel_val]
         quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta_des)
         pose_msg.pose.orientation.x = quaternion[0]
@@ -241,15 +182,15 @@ def move(pose_pub, vel_pub, cmd):
         while (time.time() - time_init)<5:
           print("Publishing Straight!")
           (roll, pitch, theta) = tf.transformations.euler_from_quaternion([pose_msg.pose.orientation.x,pose_msg.pose.orientation.y,pose_msg.pose.orientation.z,pose_msg.pose.orientation.w])
-          print(pose_msg)
+          print(theta, theta_des)
           pose_pub.publish(pose_msg)
           rate.sleep()
 
 
-        # time_init = time.time()
-        # while (time.time() - time_init)<5:
-        #     # print("Adjusting position Right!")
-        #     forward()
+        time_init = time.time()
+        while (time.time() - time_init)<5:
+            # print("Adjusting position Right!")
+            forward_faster()
 
     elif cmd == 'L':
         if not firstcom:
@@ -283,14 +224,23 @@ def move(pose_pub, vel_pub, cmd):
 
         # sel_pos = [0.0, np.round(np.pi/2,3), np.round(-np.pi/2,3), np.round(np.pi,3)]
 
-        if abs(theta)<1:
+        # if abs(theta_init)<1:
+        #     sel_val = 1
+        # elif (theta < -(np.pi/2)+0.4) and (theta > -(np.pi/2)-0.4):
+        #     sel_val = 0
+        # elif abs(theta_init)>3:
+        #     sel_val = 2
+        # elif (theta < (np.pi/2)+0.4) and (theta > (np.pi/2)-0.4):
+        #     sel_val = 3
+
+        if abs(theta)<=0.78:
             sel_val = 2
-        elif np.isclose(theta,[-np.pi/2+0.3], 0.3):
-            sel_val = 3
-        elif abs(theta_init)>3:
-            sel_val = 1
-        elif np.isclose(theta,[np.pi/2+0.3], 0.3):
+        elif (theta <= -0.78) and (theta > -2.35):
             sel_val = 0
+        elif (theta > -2.35) and (theta >= 2.35):
+            sel_val = 1
+        elif (theta < 2.35) and (theta >= 0.78):
+            sel_val = 3
 
         theta_des = sel_pos[sel_val]
         quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta_des)
@@ -303,7 +253,7 @@ def move(pose_pub, vel_pub, cmd):
         pose_msg.pose.position.y = res.pose.position.y
 
         time_init = time.time()
-        while (time.time() - time_init)<5:
+        while (time.time() - time_init)<3:
           print("Publishing Left!")
           (roll, pitch, theta) = tf.transformations.euler_from_quaternion([pose_msg.pose.orientation.x,pose_msg.pose.orientation.y,pose_msg.pose.orientation.z,pose_msg.pose.orientation.w])
           print(theta, theta_des)
@@ -317,10 +267,9 @@ def move(pose_pub, vel_pub, cmd):
         #     vel_pub.publish(velocity)
 
         time_init = time.time()
-        while (time.time() - time_init)<4:
+        while (time.time() - time_init)<5:
             # print("Adjusting position Right!")
             forward_faster()
-
 
     elif cmd == 'R':
 
@@ -359,14 +308,24 @@ def move(pose_pub, vel_pub, cmd):
 
         # sel_pos = [0.0, np.round(np.pi/2,3), np.round(-np.pi/2,3), np.round(np.pi,3)]
 
-        if abs(theta)<1:
-            sel_val = 2
-        elif np.isclose(theta,[(-np.pi/2)+0.3], 0.3):
-            sel_val = 3
-        elif abs(theta_init)>3:
+        # if abs(theta_init)<1:
+        #     sel_val = 2
+        # elif (theta < -(np.pi/2)+0.4) and (theta > -(np.pi/2)-0.4):
+        #     sel_val = 3
+        # elif abs(theta_init)>3:
+        #     sel_val = 1
+        # elif (theta < (np.pi/2)+0.4) and (theta > (np.pi/2)-0.4):
+        #     sel_val = 0
+
+        if abs(theta)<=0.78:
             sel_val = 1
-        elif np.isclose(theta,[(np.pi/2)+0.3], 0.3):
+        elif (theta <= -0.78) and (theta > -2.35):
+            sel_val = 3
+        elif (theta > -2.35) and (theta >= 2.35):
+            sel_val = 2
+        elif (theta < 2.35) and (theta >= 0.78):
             sel_val = 0
+
 
         theta_des = sel_pos[sel_val]
         quaternion = tf.transformations.quaternion_from_euler(roll,pitch,theta_des)
@@ -379,7 +338,7 @@ def move(pose_pub, vel_pub, cmd):
         pose_msg.pose.position.y = res.pose.position.y
 
         time_init = time.time()
-        while (time.time() - time_init)<5:
+        while (time.time() - time_init)<3:
           print("Publishing Right! Angle is {}, {}".format(theta, theta_des))
           (roll, pitch, theta) = tf.transformations.euler_from_quaternion([pose_msg.pose.orientation.x,pose_msg.pose.orientation.y,pose_msg.pose.orientation.z,pose_msg.pose.orientation.w])
           pose_pub.publish(pose_msg)
@@ -394,21 +353,34 @@ def move(pose_pub, vel_pub, cmd):
         #     vel_pub.publish(velocity)
 
         time_init = time.time()
-        while (time.time() - time_init)<4:
+        while (time.time() - time_init)<5:
             # print("Adjusting position Right!")
             forward_faster()
 
 
     elif cmd == 'D':
 
-        if abs(theta_init)<1:
-            sel_val = 3
-        elif np.isclose([-np.pi/2],[-np.pi/2+0.3], 0.3):
-            sel_val = 1
-        elif abs(theta_init)>3:
+        res = gms_client("robot_1", "link")
+        init_orient = res.pose.orientation
+        (roll,pitch,theta) = tf.transformations.euler_from_quaternion([init_orient.x,init_orient.y,init_orient.z,init_orient.w])
+
+        if abs(theta)<=0.78:
             sel_val = 0
-        elif np.isclose([np.pi/2],[np.pi/2+0.3], 0.3):
+        elif (theta <= -0.78) and (theta > -2.35):
+            sel_val = 1
+        elif (theta > -2.35) and (theta >= 2.35):
+            sel_val = 3
+        elif (theta < 2.35) and (theta >= 0.78):
             sel_val = 2
+
+        # if abs(theta_init)<1:
+        #     sel_val = 3
+        # elif np.isclose([-np.pi/2],[-np.pi/2+0.3], 0.3):
+        #     sel_val = 1
+        # elif abs(theta_init)>3:
+        #     sel_val = 0
+        # elif np.isclose([np.pi/2],[np.pi/2+0.3], 0.3):
+        #     sel_val = 2
 
         res = gms_client("robot_1", "link")
         init_orient = res.pose.orientation
@@ -428,7 +400,7 @@ def move(pose_pub, vel_pub, cmd):
         while (time.time() - time_init)<5:
           print("Publishing message to change pose!")
           (roll, pitch, theta) = tf.transformations.euler_from_quaternion([pose_msg.pose.orientation.x,pose_msg.pose.orientation.y,pose_msg.pose.orientation.z,pose_msg.pose.orientation.w])
-          print(pose_msg)
+          print(theta, theta_des)
           pose_pub.publish(pose_msg)
           rate.sleep()
 
@@ -441,28 +413,107 @@ def move(pose_pub, vel_pub, cmd):
         #     vel_pub.publish(velocity)
 
         time_init = time.time()
-        while (time.time() - time_init)<4:
+        while (time.time() - time_init)<5:
             # print("Adjusting position Right!")
-            forward()
-
+            forward_faster()
 
     return False
 
 
+
+class symbolsubclass(object):
+    def __init__(self):
+    # save the subscriber object to a class member
+        self.sub = rospy.Subscriber("/symbols", String, self.callback, queue_size=1)
+        self.symbols = None
+
+    def callback(self,data):
+
+        self.symbols = data.data
+
+    def get_sym(self):
+            return self.symbols
+
+    def unsubscribe(self):
+    # use the saved subscriber object to unregister the subscriber
+        self.sub.unregister()
+
+
+
+
+class kt_switch(object):
+    def __init__(self):
+    # save the subscriber object to a class member
+        self.sub = rospy.Subscriber("/switcher", String, self.callback, queue_size=1)
+        self.req = None
+
+    def callback(self,data):
+
+        if "Ready" in str(data):
+            self.req = True
+
+
+    def get_req(self):
+            return self.req
+
+    def unsubscribe(self):
+    # use the saved subscriber object to unregister the subscriber
+        self.sub.unregister()
+
+
+
+class robotposeclass(object):
+    def __init__(self):
+    # save the subscriber object to a class member
+        self.sub = rospy.Subscriber("/robot_1/odom", Odometry, self.callback, queue_size=20)
+        self.res = gms_client("robot_1", "link")
+        self.pose = Odometry()
+
+        x_gz = np.round(self.res.pose.position.x,3)
+        y_gz = np.round(self.res.pose.position.y,3)
+        w_gz = np.round(self.res.pose.orientation.w,3)
+
+        self.pose_gz = [x_gz, y_gz, w_gz]
+
+    def callback(self,data):
+
+
+        x = np.round(data.pose.pose.position.x,3)
+        y = np.round(data.pose.pose.position.y,3)
+        w = np.round(data.pose.pose.orientation.w,3)
+
+        self.pose = data
+        # self.pose = [x,y,w]
+
+    def getpose(self):
+            # return self.pose_gz
+            return self.pose
+
+    def unsubscribe(self):
+    # use the saved subscriber object to unregister the subscriber
+        self.sub.unregister()
+
 if __name__ == '__main__':
-    switch = kt_switch()
-
-    # print("Waiting for switch")
-
-    if "Ready" in str(switch.get_req()):
-        print(" Knowledge transfer pipeline initiated")
-
-    redet = True
 
     rospy.init_node("Intersection_navigator", anonymous=True)
 
-    vel_pub = rospy.Publisher("/robot_1/mobile_base/commands/velocity", Twist, queue_size = 0)
-    pose_pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=0)
+    rospy.set_param('unpause_sim', False)
+    switch = kt_switch()
+
+    while not switch.get_req():
+        print("Waiting for switch")
+
+    time_init = time.time()
+    while (time.time() - time_init)<5:
+        print("Got switching motion!")
+
+
+    rospy.set_param('unpause_sim', True)
+
+    redet = True
+
+    vel_pub = rospy.Publisher("/robot_1/mobile_base/commands/velocity", Twist, queue_size = 1)
+    pose_pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size = 1)
     sym_subs = symbolsubclass()
     detect = detect_inter()
 
@@ -475,8 +526,16 @@ if __name__ == '__main__':
 
     firstcom = True
 
+    if "None" in CMD:
+        print("Looks like I've reached the goal!")
+        rospy.set_param('goal_reached', True)
+
+        while not sym_subs.get_sym():
+            print("Waiting for new symbols")
+
     while not rospy.is_shutdown():
-        print("REDET VAL IS {}".format(redet))
+
+        print("CMD list is {}".format(cmd_list))
         if detect.found() and len(cmd_list)!=0 and not redet and not firstcom:
             print("At an intersection! Executing next command!")
             cmd = cmd_list.pop(0)
@@ -486,8 +545,26 @@ if __name__ == '__main__':
             # time.sleep(5)
 
         elif len(cmd_list) == 0:
+            time_init = time.time()
+            while (time.time() - time_init)<4:
+                # print("Adjusting position Right!")
+                forward_faster()
+
             print("No more commands to follow")
-            break
+
+            time.sleep(5)
+            rospy.set_param('goal_reached', True)
+
+            while not sym_subs.get_sym():
+                print("Waiting for new symbols")
+
+            CMD = str(sym_subs.get_sym())
+
+            cmd_list = list(CMD)
+
+            firstcom = True
+
+
         elif firstcom:
             cmd = cmd_list.pop(0)
             print("Executing first command! {}".format(cmd))
