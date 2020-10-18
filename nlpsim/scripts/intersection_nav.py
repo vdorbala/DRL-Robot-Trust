@@ -88,15 +88,6 @@ class detect_inter(object):
         self.sub.unregister()
 
 
-def gms_client(model_name,relative_entity_name):
-    rospy.wait_for_service('/gazebo/get_model_state')
-    try:
-        gms = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
-        resp1 = gms(model_name,relative_entity_name)
-        return resp1
-    except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
-
 def forward():
     velocity = Twist()
     velocity.linear.x = 0.3
@@ -110,24 +101,24 @@ def forward_faster():
 
 def move(pose_pub, vel_pub, cmd):
 
-    res = gms_client("robot_1", "link")
-    velocity = Twist()
+    # res = gms_client("robot_1", "link")
+    # velocity = Twist()
 
-    pose_msg = ModelState()
-    pose_msg.model_name = 'robot_1'
+    # pose_msg = ModelState()
+    # pose_msg.model_name = 'robot_1'
 
     rate = rospy.Rate(50)
 
-    robot = robotposeclass()
+    # robot = robotposeclass()
 
-    theta_init = 0.0
+    # theta_init = 0.0
 
-    while theta_init==0.0:
-        res = gms_client("robot_1", "link")
+    # while theta_init==0.0:
+    #     res = gms_client("robot_1", "link")
 
-        init_orient = res.pose.orientation
+    #     init_orient = res.pose.orientation
 
-        (roll,pitch,theta_init) = tf.transformations.euler_from_quaternion([init_orient.x,init_orient.y,init_orient.z,init_orient.w])
+    #     (roll,pitch,theta_init) = tf.transformations.euler_from_quaternion([init_orient.x,init_orient.y,init_orient.z,init_orient.w])
 
     sel_pos = [0.0, np.round(np.pi/2,3), np.round(-np.pi/2,3), np.round(np.pi,3)]
 
@@ -148,16 +139,6 @@ def move(pose_pub, vel_pub, cmd):
         res = gms_client("robot_1", "link")
         init_orient = res.pose.orientation
         (roll,pitch,theta) = tf.transformations.euler_from_quaternion([init_orient.x,init_orient.y,init_orient.z,init_orient.w])
-
-        # if abs(theta_init)<1:
-        #     sel_val = 0
-        # elif (theta < -(np.pi/2)+0.4) and (theta > -(np.pi/2)-0.4):
-        #     sel_val = 2
-        # elif abs(theta_init)>3:
-        #     sel_val = 3
-        # elif (theta < (np.pi/2)+0.4) and (theta > (np.pi/2)-0.4):
-        #     sel_val = 1
-
 
         if abs(theta)<=0.78:
             sel_val = 3
@@ -222,17 +203,6 @@ def move(pose_pub, vel_pub, cmd):
         init_orient = res.pose.orientation
         (roll,pitch,theta) = tf.transformations.euler_from_quaternion([init_orient.x,init_orient.y,init_orient.z,init_orient.w])
 
-        # sel_pos = [0.0, np.round(np.pi/2,3), np.round(-np.pi/2,3), np.round(np.pi,3)]
-
-        # if abs(theta_init)<1:
-        #     sel_val = 1
-        # elif (theta < -(np.pi/2)+0.4) and (theta > -(np.pi/2)-0.4):
-        #     sel_val = 0
-        # elif abs(theta_init)>3:
-        #     sel_val = 2
-        # elif (theta < (np.pi/2)+0.4) and (theta > (np.pi/2)-0.4):
-        #     sel_val = 3
-
         if abs(theta)<=0.78:
             sel_val = 2
         elif (theta <= -0.78) and (theta > -2.35):
@@ -259,12 +229,6 @@ def move(pose_pub, vel_pub, cmd):
           print(theta, theta_des)
           pose_pub.publish(pose_msg)
           rate.sleep()
-
-        # velocity = Twist()
-        # time_init = time.time()
-        # while (time.time() - time_init)<1:
-        #     print("Stopping now!")
-        #     vel_pub.publish(velocity)
 
         time_init = time.time()
         while (time.time() - time_init)<5:
@@ -306,17 +270,6 @@ def move(pose_pub, vel_pub, cmd):
         init_orient = res.pose.orientation
         (roll,pitch,theta) = tf.transformations.euler_from_quaternion([init_orient.x,init_orient.y,init_orient.z,init_orient.w])
 
-        # sel_pos = [0.0, np.round(np.pi/2,3), np.round(-np.pi/2,3), np.round(np.pi,3)]
-
-        # if abs(theta_init)<1:
-        #     sel_val = 2
-        # elif (theta < -(np.pi/2)+0.4) and (theta > -(np.pi/2)-0.4):
-        #     sel_val = 3
-        # elif abs(theta_init)>3:
-        #     sel_val = 1
-        # elif (theta < (np.pi/2)+0.4) and (theta > (np.pi/2)-0.4):
-        #     sel_val = 0
-
         if abs(theta)<=0.78:
             sel_val = 1
         elif (theta <= -0.78) and (theta > -2.35):
@@ -345,13 +298,6 @@ def move(pose_pub, vel_pub, cmd):
           rate.sleep()
 
 
-
-        # velocity = Twist()
-        # time_init = time.time()
-        # while (time.time() - time_init)<1:
-        #     print("Stopping now!")
-        #     vel_pub.publish(velocity)
-
         time_init = time.time()
         while (time.time() - time_init)<5:
             # print("Adjusting position Right!")
@@ -372,15 +318,6 @@ def move(pose_pub, vel_pub, cmd):
             sel_val = 3
         elif (theta < 2.35) and (theta >= 0.78):
             sel_val = 2
-
-        # if abs(theta_init)<1:
-        #     sel_val = 3
-        # elif np.isclose([-np.pi/2],[-np.pi/2+0.3], 0.3):
-        #     sel_val = 1
-        # elif abs(theta_init)>3:
-        #     sel_val = 0
-        # elif np.isclose([np.pi/2],[np.pi/2+0.3], 0.3):
-        #     sel_val = 2
 
         res = gms_client("robot_1", "link")
         init_orient = res.pose.orientation
@@ -404,41 +341,12 @@ def move(pose_pub, vel_pub, cmd):
           pose_pub.publish(pose_msg)
           rate.sleep()
 
-
-
-        # velocity = Twist()
-        # time_init = time.time()
-        # while (time.time() - time_init)<1:
-        #     print("Stopping now!")
-        #     vel_pub.publish(velocity)
-
         time_init = time.time()
         while (time.time() - time_init)<5:
             # print("Adjusting position Right!")
             forward_faster()
 
     return False
-
-
-
-class symbolsubclass(object):
-    def __init__(self):
-    # save the subscriber object to a class member
-        self.sub = rospy.Subscriber("/symbols", String, self.callback, queue_size=1)
-        self.symbols = None
-
-    def callback(self,data):
-
-        self.symbols = data.data
-
-    def get_sym(self):
-            return self.symbols
-
-    def unsubscribe(self):
-    # use the saved subscriber object to unregister the subscriber
-        self.sub.unregister()
-
-
 
 
 class kt_switch(object):
@@ -493,6 +401,23 @@ class robotposeclass(object):
     # use the saved subscriber object to unregister the subscriber
         self.sub.unregister()
 
+class selected_symbols(object):
+    def __init__(self, class_type):
+    # save the subscriber object to a class member
+        self.sub = rospy.Subscriber("/selected_symbols", String, self.callback, queue_size=1)
+        self.symbols = None
+
+    def callback(self,data):
+        self.symbols = data.data
+
+    def get_sym(self):
+            return self.symbols
+
+    def unsubscribe(self):
+    # use the saved subscriber object to unregister the subscriber
+        self.sub.unregister()
+
+
 if __name__ == '__main__':
 
     rospy.init_node("Intersection_navigator", anonymous=True)
@@ -512,15 +437,15 @@ if __name__ == '__main__':
 
     redet = True
 
-    vel_pub = rospy.Publisher("/robot_1/mobile_base/commands/velocity", Twist, queue_size = 1)
+    vel_pub = rospy.Publisher("/vel_cmds", Twist, queue_size = 1)
     pose_pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size = 1)
-    sym_subs = symbolsubclass()
+    sym_subs = selected_symbols()
     detect = detect_inter()
 
-    while not sym_subs.get_sym():
+    while not sym_subs.get_sym(follow_type):
         print("Waiting for symbols")
 
-    CMD = str(sym_subs.get_sym())
+    CMD = str(sym_subs.get_sym(follow_type))
 
     cmd_list = list(CMD)
 
@@ -530,7 +455,7 @@ if __name__ == '__main__':
         print("Looks like I've reached the goal!")
         rospy.set_param('goal_reached', True)
 
-        while not sym_subs.get_sym():
+        while not sym_subs.get_sym(follow_type):
             print("Waiting for new symbols")
 
     while not rospy.is_shutdown():
@@ -555,10 +480,10 @@ if __name__ == '__main__':
             time.sleep(5)
             rospy.set_param('goal_reached', True)
 
-            while not sym_subs.get_sym():
+            while not sym_subs.get_sym(follow_type):
                 print("Waiting for new symbols")
 
-            CMD = str(sym_subs.get_sym())
+            CMD = str(sym_subs.get_sym(follow_type))
 
             cmd_list = list(CMD)
 

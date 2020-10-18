@@ -175,9 +175,9 @@ def main(END_GOAL, res):
     yaw=np.round(euler[2],3)
     gazebo_start=[x,y]
     gazebo_end=END_GOAL
-    startnode=tuple(m2g[interpos(gazebo_start,gazebo,m2g)])#not a room 
-    endnode=tuple(m2g[interposend(gazebo_end,gazebo,m2g)])#mostly a room
-    i_ori=approx_dir(yaw)#initial orientation
+    startnode=tuple(m2g[interpos(gazebo_start,gazebo,m2g)])  #not a room 
+    endnode=tuple(m2g[interposend(gazebo_end,gazebo,m2g)])  #mostly a room
+    i_ori=approx_dir(yaw)  #initial orientation
     probgoal=goalprob(endnode,maze)
     maxgoal=predmaxprobgoal(endnode,maze)
     nonrepgoal={}
@@ -233,13 +233,14 @@ if __name__ == '__main__':
 
         while not rospy.is_shutdown():
             res = gms_client("robot_1", "link")
-
-            reset = rospy.get_param("goal_reached")
             x = random.uniform(-x_size, x_size)
             y = random.uniform(-y_size, y_size)
+
+            reset = rospy.get_param("goal_reached")
 
             END_GOAL = [np.round(x,2), np.round(y,2)]
             while reset:
                 print("Sending goal {}".format(END_GOAL))
                 main(END_GOAL, res)
                 rospy.set_param("goal_reached", False)
+                reset = rospy.get_param("goal_reached")
