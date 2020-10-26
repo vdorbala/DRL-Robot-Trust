@@ -37,7 +37,12 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.action_space = [-1, 0, 1, 2, 7]
         print("Action space is {}".format(self.action_space))
         self.reward_range = (-200, 500)
-    
+
+        self.human_detect = False
+
+        self.gateway_detect = False
+
+
     @property
     def front_pos(self):
         """
@@ -118,13 +123,43 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         self.mission = "get to the green goal square using human instructions"
 
+    def update_humans(self):
+        for i_obst in range(len(self.obstacles)):
+            old_pos = self.obstacles[i_obst].cur_pos
+            top = tuple(map(add, old_pos, (-1, -1)))
+
+            try:
+                self.place_obj(self.obstacles[i_obst], top=top, size=(3,3), max_tries=100)
+                self.grid.set(*old_pos, None)
+            except:
+                pass
+
+
+    def check_human(self):
+        front_cell = self.grid.get(*self.front_pos)
+        not_clear = front_cell and front_cell.type != 'goal'
+        # if action == self.actions.interact and not_clear:
+            # self.human_detect = True
+
+        return self.human_detect
+
+
+
+    def check_gateway():
+        # Write code for gateway point region detection
+
+        return self.gateway_detect
+
 
 
 
     def step(self, action):
         # Invalid action
-        if action not in self.action_space:
-            action = 0
+        # if action not in self.action_space:
+            # action = 0
+
+        self.human_detect = False
+        self.gateway_detect = False
 
         # Check if there is a human in front of the agent
         front_cell = self.grid.get(*self.front_pos)

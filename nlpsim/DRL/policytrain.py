@@ -134,8 +134,7 @@ def move(act):
         if fwd_cell != None and fwd_cell.type == 'goal':
             done = True
             reward = env._reward()
-        if fwd_cell != None and fwd_cell.type == 'lava':
-            done = True
+
 
     # Move backward
     elif act == 3:
@@ -144,8 +143,6 @@ def move(act):
         if back_cell != None and back_cell.type == 'goal':
             done = True
             reward = self._reward()
-        if back_cell != None and back_cell.type == 'lava':
-            done = True
 
     return done
 
@@ -156,15 +153,17 @@ def event_control(env):
     while True:
         env.render('human')
         env.update_humans()
-        if (human_detect == True) or (gateway_detect == True):
+        if (env.human_detect == True) or (env.gateway_detect == True):
             step(env.actions.forward)
         else:
             print("Exploring till I find gateway or human!")
             done = move(np.random.randint(0,3))
 
-            if done or env.window.closed:
+            if env.window.closed:
                 break
-    
+        
+        print(done)
+
     return 0
             # env.agent_pos = env.front_pos
         # if rospy.get_param("/")
