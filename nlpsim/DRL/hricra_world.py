@@ -4,7 +4,6 @@ from operator import add
 import random
 import numpy as np
 
-
 class DynamicObstaclesEnv(MiniGridEnv):
     """
     Single-room square grid environment with moving obstacles
@@ -17,14 +16,11 @@ class DynamicObstaclesEnv(MiniGridEnv):
             agent_start_dir=0,
             n_obstacles=4,
             goal_pos=(15,15),
-            room_num = 9
     ):
         print("Starting position is {}\n. Direction is {}".format(agent_start_pos, agent_start_dir))
         self.agent_start_pos = agent_start_pos
         self.agent_start_dir = agent_start_dir
         self.goal_pos = goal_pos
-        self.room_num = 9
-
         # Reduce obstacles if there are too many
         if n_obstacles <= size/2 + 1:
             self.n_obstacles = int(n_obstacles)
@@ -39,6 +35,19 @@ class DynamicObstaclesEnv(MiniGridEnv):
         # Allow only 3 actions permitted: left, right, forward
         self.action_space = spaces.Discrete(self.actions.forward + 1)
         self.reward_range = (-1, 1)
+    
+
+    def check_room(self, gp):
+        x = np.arange(5, 61, 8)
+        y = np.arange(4, 61, 10)
+
+        for i in x:
+            for j in y:
+              if(i<=gp[0]<i+5) and (j<=gp[1]<j+5):
+                   return True
+        return False
+
+
 
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -47,16 +56,34 @@ class DynamicObstaclesEnv(MiniGridEnv):
         # Generate the surrounding walls
         self.grid.wall_rect(0, 0, width, height)
 
-        x = np.arange(5, 22, 8)
-        y = np.arange(5, 22, 8)
+        x = np.arange(5, 61, 8)
+        # y = np.arange(4, 44, 10)
+        y = np.arange(4, 61, 10)
         # xx, yy = np.meshgrid(x, y)
         # Generate rooms
         for i in range(0, len(x)):
             for j in range(0, len(y)):
                 self.grid.wall_rect(x[i], y[j], 5, 5)
 
-        # Place a goal square in the bottom-right corner
+
+        # CHECK if GOAL lies inside room or on walls.
+        gp=self.goal_pos
+        while(self.check_room(gp)):
+            gp=(random.randint(1,62), random.randint(1,62))
+        self.goal_pos=gp
+
+        gp=self.agent_start_pos
+        while(self.check_room(gp)):
+            gp=(random.randint(1,62), random.randint(1,62))
+        self.agent_start_pos=gp
+        
+
+        # Place a goal square at a random location
         self.grid.set(self.goal_pos[0], self.goal_pos[1], Goal())
+
+        # CHECK if AGENT lies inside room or on walls.
+        # self.agent_start_pos !=:
+        
 
         # Place the agent
         if self.agent_start_pos is not None:
@@ -72,6 +99,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
             self.place_obj(self.obstacles[i_obst], max_tries=100)
 
         self.mission = "get to the green goal square"
+
 
 
 
@@ -106,13 +134,67 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         return obs, reward, done, info
 
+class DynamicObstaclesEnv5x5(DynamicObstaclesEnv):
+    def __init__(self):
+        super().__init__(size=5, n_obstacles=2)
+
+class DynamicObstaclesRandomEnv5x5(DynamicObstaclesEnv):
+    def __init__(self):
+        super().__init__(size=5, agent_start_pos=None, n_obstacles=2)
+
+class DynamicObstaclesEnv6x6(DynamicObstaclesEnv):
+    def __init__(self):
+        super().__init__(size=6, n_obstacles=3)
+
+class DynamicObstaclesRandomEnv6x6(DynamicObstaclesEnv):
+    def __init__(self):
+        super().__init__(size=6, agent_start_pos=None, n_obstacles=3)
+
+class DynamicObstaclesEnv16x16(DynamicObstaclesEnv):
+    def __init__(self):
+        super().__init__(size=16, n_obstacles=8)
+
+
 
 class DynamicObstaclesEnv30x30(DynamicObstaclesEnv):
     def __init__(self):
-        super().__init__(size=30, n_obstacles=10, agent_start_pos=(random.randint(1,28), random.randint(1,28)), agent_start_dir=(random.randint(0,3)), goal_pos=(random.randint(1,28), random.randint(1,28)))
+        super().__init__(size=64, n_obstacles=20, agent_start_pos=(random.randint(1,62), random.randint(1,62)), agent_start_dir=(random.randint(0,3)), goal_pos=(random.randint(1,62), random.randint(1,62)))
 
+
+
+
+register(
+    id='MiniGrid-Dynamic-Obstacles-5x5-v0',
+    entry_point='gym_minigrid.envs:DynamicObstaclesEnv5x5'
+)
+
+register(
+    id='MiniGrid-Dynamic-Obstacles-Random-5x5-v0',
+    entry_point='gym_minigrid.envs:DynamicObstaclesRandomEnv5x5'
+)
+
+register(
+    id='MiniGrid-Dynamic-Obstacles-6x6-v0',
+    entry_point='gym_minigrid.envs:DynamicObstaclesEnv6x6'
+)
+
+register(
+    id='MiniGrid-Dynamic-Obstacles-Random-6x6-v0',
+    entry_point='gym_minigrid.envs:DynamicObstaclesRandomEnv6x6'
+)
+
+register(
+    id='MiniGrid-Dynamic-Obstacles-8x8-v0',
+    entry_point='gym_minigrid.envs:DynamicObstaclesEnv'
+)
+
+register(
+    id='MiniGrid-Dynamic-Obstacles-16x16-v0',
+    entry_point='gym_minigrid.envs:DynamicObstaclesEnv16x16'
+)
 
 register(
     id='MiniGrid-Dynamic-Obstacles-30x30-v0',
     entry_point='gym_minigrid.envs:DynamicObstaclesEnv30x30'
 )
+
