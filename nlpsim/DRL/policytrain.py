@@ -155,7 +155,7 @@ def event_control(env):
     
     while True:
         env.render('human')
-    
+        env.update_humans()
         if (human_detect == True) or (gateway_detect == True):
             step(env.actions.forward)
         else:
