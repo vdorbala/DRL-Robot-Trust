@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import time
 import argparse
 import numpy as np
@@ -7,8 +6,6 @@ import gym
 import gym_minigrid
 from gym_minigrid.wrappers import *
 from gym_minigrid.window import Window
-
-import rospy
 
 
 def redraw(img):
@@ -134,7 +131,8 @@ def move(act):
         if fwd_cell != None and fwd_cell.type == 'goal':
             done = True
             reward = env._reward()
-
+        if fwd_cell != None and fwd_cell.type == 'lava':
+            done = True
 
     # Move backward
     elif act == 3:
@@ -143,6 +141,8 @@ def move(act):
         if back_cell != None and back_cell.type == 'goal':
             done = True
             reward = self._reward()
+        if back_cell != None and back_cell.type == 'lava':
+            done = True
 
     return done
 
@@ -153,8 +153,8 @@ def event_control(env):
     while True:
         env.render('human')
         env.update_humans()
-        if (env.human_detect == True) or (env.gateway_detect == True):
-            step(env.actions.forward)
+        if (human_detect == True) or (gateway_detect == True):
+            step()
         else:
             print("Exploring till I find gateway or human!")
             done = move(np.random.randint(0,3))
