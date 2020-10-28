@@ -1003,6 +1003,15 @@ class MiniGridEnv(gym.Env):
 
         return self.agent_pos + self.dir_vec
 
+    @property
+    def back_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.agent_pos - self.dir_vec
+
+
     def get_view_coords(self, i, j):
         """
         Translate and rotate absolute grid coordinates (i, j) into the
