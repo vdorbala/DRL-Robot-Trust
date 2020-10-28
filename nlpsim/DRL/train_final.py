@@ -97,7 +97,6 @@ def train():
 
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     # Load environments
 
     env = 'MiniGrid-Dynamic-Obstacles-30x30-v0'
@@ -124,9 +123,9 @@ def train():
     print("Observation space is ! {}".format(obs_space))
 
     # Load algo
-    algo = PPO2(CustomPolicy, envs[0], n_steps=900, ent_coef=0.01, learning_rate=0.0001, nminibatches=5, tensorboard_log="./logs/", verbose=1)
-    algo.learn(total_timesteps=1000000)
-    algo.save("hricra")
+    algo = PPO2(CustomPolicy, envs[0], n_steps=15, ent_coef=0.01, learning_rate=0.01, nminibatches=5, tensorboard_log="./logs/", verbose=1)
+    algo.learn(total_timesteps=10000)
+    algo.save("hricra_{}".format(time.time()))
 
 
 if __name__ == '__main__':
