@@ -21,8 +21,12 @@ l=len(max_prob_list)
 prob_dis=np.array([1,0.75,0.5,0.3])
 
 
+Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D":"L"}, "R": {"L":"D","R":"U","U":"L","D":"R"},"D":{"L":"R","R":"L","U":"D","D":"U"}} 
 
 dir_vec={'R':0,'D':1,'L':2,'U':3}
+
+
+
 
 
 
@@ -143,18 +147,46 @@ def inter(x):
         a=True
     return a
 
+# def command(path,i_ori):
+#     command=""
+#     if(len(path))<2:
+#         return command
+#     prev=front[path[1][0]-path[0][0]]+side[path[1][1]-path[0][1]]
+#     command = prev
+#     for i in range(len(path)-1):
+#         dir=front[path[i+1][0]-path[i][0]]+side[path[i+1][1]-path[i][1]]
+#         if(inter(path[i])):
+#             command = command + dir
+
+#     return command
+
+
+
 def command(path,i_ori):
     command=""
+    # print(path)
     if(len(path))<2:
         return command
     prev=front[path[1][0]-path[0][0]]+side[path[1][1]-path[0][1]]
-    command = prev
+    if(i_ori !=prev):
+        command= command + Dict[i_ori][prev]
+    # else:
+    #     command= command + "S"
     for i in range(len(path)-1):
         dir=front[path[i+1][0]-path[i][0]]+side[path[i+1][1]-path[i][1]]
+        # print("present ",dir)
         if(inter(path[i])):
-            command = command + dir
+            # print("Intersection")
+            # print("append",Dict[prev][dir])
+            # command.append(Dict[prev][dir])
+            command+=Dict[prev][dir]
+
+        prev=dir
 
     return command
+
+
+
 
 def distance(startCoordinate,goalCoordinate):
     sx,sy = startCoordinate[0],startCoordinate[1]
@@ -267,14 +299,14 @@ def get_command(agentpos, agentdir, goalpos):
             print("goal_command",goal_command,goal_pt)
             out=correct_prob(startnode,goal_pt,goal_command)
             print("final prob distribution",out[0][0],"avg prob",out[0][1])
-        print("All possible goal")
-        print("command goal prob/dist from start to goal")
-        for i in nonrepgoal:
-                    print(i,dd[nonrepgoal[i]],nonrepgoal[i])
+        # print("All possible goal")
+        # print("command goal prob/dist from start to goal")
+        # for i in nonrepgoal:
+        #             print(i,dd[nonrepgoal[i]],nonrepgoal[i])
         
         # use goal_command for global command directions start symbol is the orientation change
         # use out[0][0]) for correspondind prob distribution
-        print(out[0][0])
+
         return [str_nparray(goal_command), out[0][1]]
 
 
