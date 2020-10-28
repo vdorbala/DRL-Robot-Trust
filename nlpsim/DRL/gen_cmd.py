@@ -20,6 +20,19 @@ max_prob_list=list(prob_set)
 l=len(max_prob_list)
 prob_dis=np.array([1,0.75,0.5,0.3])
 
+
+
+dir_vec={'R':0,'D':1,'L':2,'U':3}
+
+
+
+def str_nparray(st):
+    lt=[]
+    for i in st:
+        lt.append(dir_vec[i])
+    return np.array(lt)
+
+
 def def_value(): 
     return ""
 front = defaultdict(def_value) 
@@ -262,7 +275,7 @@ def get_command(agentpos, agentdir, goalpos):
         # use goal_command for global command directions start symbol is the orientation change
         # use out[0][0]) for correspondind prob distribution
         print(out[0][0])
-        return [goal_command, out[0][0]]
+        return [str_nparray(goal_command), out[0][1]]
 
 
 

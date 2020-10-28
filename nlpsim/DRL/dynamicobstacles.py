@@ -4,8 +4,9 @@ from gym_minigrid.register import register
 from operator import add
 import random
 import numpy as np
+from gym_minigrid.envs.gen_cmd import get_command
 
-from gym_minigrid.envs.gen_cmd import get_dir,get_conf
+# from gym_minigrid.envs.gen_cmd import get_dir,get_conf
 
 
 from gym_minigrid.envs.maze import maze,m2g, gazebo ,inter_x,mid_x
@@ -13,146 +14,6 @@ from gym_minigrid.envs.pathplan import astar
 # from gym_minigrid.envs.pos import check_room,check_mid
 
 from collections import defaultdict 
-
-
-ps=[0,0.5,0.75,1]
-prob_set={}
-count=1
-for i in ps:
-    for j in ps:
-        prob_set[i*j]=count
-        count=count+1
-
-# for i in prob_set:
-#   print(i)
-max_prob_list=list(prob_set)
-l=len(max_prob_list)
-prob_dis=np.array([1,0.75,0.5,0.3])
-
-def def_value(): 
-    return ""
-front = defaultdict(def_value) 
-front[1] = "D"
-front[-1] = "U"
-side= defaultdict(def_value) 
-side[1]="R"
-side[-1]="L"
-
-def prob_scores(goal): 
-        init_prob=[1,0.75,0.5] 
-        ipr=np.random.choice(3)
-        goal_prob=[init_prob[ipr]]
-
-        if(len(goal)==1):
-            return goal_prob
-        else:
-            i=0
-            while(len(goal_prob)<=len(goal)-1):
-                a=max_prob_list[np.random.choice(l,1,p=[0.1,0.15,0.05,0.3,0.1,0.15,0.15])[0]]
-                if (a <=goal_prob[i]):
-                    goal_prob.append(a)
-                    i=i+1
-        s=sum(goal_prob)
-        avg=s/len(goal_prob)
-        return [goal_prob,avg]
-def distribution(start,goal):
-    if(distance(start,goal)<=6):
-        return [prob_dis[0],0]
-    if(6<distance(start,goal)<=12):
-        return [prob_dis[1],1]
-    if(12<distance(start,goal)<=15):
-        return [prob_dis[2],2]
-    if(15<distance(start,goal)):
-        return [prob_dis[3],3]
-
-def interneighbour(pos,maze):
-    p=[tuple(pos)]
-    N=(pos[0]+2,pos[1])
-    S=(pos[0]-2,pos[1])
-    E=(pos[0],pos[1]+2)
-    W=(pos[0],pos[1]-2)
-
-    if(bounds(maze,N)):
-        p.append(N)
-    if(bounds(maze,S)):
-        p.append(S)
-    if(bounds(maze,E)):
-        p.append(E)
-    if(bounds(maze,W)):
-        p.append(W)
-    return p
-
-def bounds(maze,curr):
-    a=True
-    if curr[0] > (len(maze) - 1) or curr[0] < 0 or curr[1] > (len(maze[len(maze)-1]) -1) or curr[1] < 0 :
-                    a=False
-    return a
-def close(a,b):
-    return np.argmin(abs(prob_dis-a))==b[1]
-
-def correct_prob(start,goal,command):
-    avg=prob_scores(command)
-    dp=distribution(start,goal)
-
-
-    while(not close(avg[1], dp)):
-        avg=prob_scores(command)
-
-    return(avg,dp)
-DIR_TO_STR = {
-            0: 'R',
-            1: 'D',
-            2: 'L',
-            3: 'U'
-        }
-
-def farneighbour(pos,maze):
-    NE=(pos[0]+2,pos[1]+2)
-    SW=(pos[0]-2,pos[1]-2)
-    SE=(pos[0]-2,pos[1]+2)
-    NW=(pos[0]+2,pos[1]-2)
-
-    if(bounds(maze,NE)):
-        p.append(NE)
-    if(bounds(maze,SE)):
-        p.append(SE)
-    if(bounds(maze,SW)):
-        p.append(SW)
-    if(bounds(maze,NW)):
-        p.append(NW)
-    return p
-
-def inter(x):
-    a=False
-    if(x[0]%2==0 and x[1]%2==0):
-        a=True
-    return a
-
-def command(path,i_ori):
-    command=""
-    if(len(path))<2:
-        return command
-    prev=front[path[1][0]-path[0][0]]+side[path[1][1]-path[0][1]]
-    command = prev
-    for i in range(len(path)-1):
-        dir=front[path[i+1][0]-path[i][0]]+side[path[i+1][1]-path[i][1]]
-        if(inter(path[i])):
-            command = command + dir
-
-    return command
-
-def distance(startCoordinate,goalCoordinate):
-    sx,sy = startCoordinate[0],startCoordinate[1]
-    gx,gy = goalCoordinate[0],goalCoordinate[1]
-    return math.sqrt((gx-sx)**2 + (gy-sy)**2)#instead of using scipy.spatial importing distance
-
-mid_x=[ 2, 10, 18, 26, 34, 42, 50, 58]
-
-
-
-
-
-
 
 
 class DynamicObstaclesEnv(MiniGridEnv):
@@ -250,9 +111,9 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.observation_space = spaces.Box(low, high)
 
 
-        self.commands = get_dir()
+        self.commands = [10, 10, 10, 10]
 
-        self.confidence = get_conf()
+        self.confidence = 0.0
 
         self.icount = 0
 
@@ -281,6 +142,8 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         return self.agent_pos - self.dir_vec
 
+    def init_cmd(self):
+        self.commands = [10, 10, 10, 10]
 
     def check_room(gp):
         x = np.arange(4, 60, 8)
@@ -336,15 +199,6 @@ class DynamicObstaclesEnv(MiniGridEnv):
                 return True
         return False
 
-    def distribution(self,start,goal):
-        if(distance(start,goal)<=6):
-            return [prob_dis[0],0]
-        if(6<distance(start,goal)<=12):
-            return [prob_dis[1],1]
-        if(12<distance(start,goal)<=15):
-            return [prob_dis[2],2]
-        if(15<distance(start,goal)):
-            return [prob_dis[3],3]
 
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -387,22 +241,6 @@ class DynamicObstaclesEnv(MiniGridEnv):
         print("mod start pos is",self.agent_start_pos)
         print("mod goal pos is",self.goal_pos)
 
-        startnode=self.gridclose(self.agent_start_pos,inter_x)
-        endnode=self.gridclose(self.goal_pos,inter_x)
-        i_ori=DIR_TO_STR[self.agent_start_dir]
-        path = astar(maze, startnode, endnode)
-        print(command(path,i_ori))
-        goal_command=command(path,i_ori)
-        confidence=distribution(startnode,endnode)
-        print(confidence)
-
-        out=correct_prob(startnode,endnode,goal_command)
-        print("final prob distribution",out[0][0],"avg prob",out[0][1])
-
-        path = astar(maze, startnode, endnode)
-        print(startnode)
-        print(endnode)
-        print(path)
 
         # Place the agent
         if self.agent_start_pos is not None:
@@ -418,57 +256,6 @@ class DynamicObstaclesEnv(MiniGridEnv):
             self.place_obj(self.obstacles[i_obst], max_tries=100)
 
         self.mission = "get to the green goal square using human instructions"
-
-    # def _gen_grid(self, width, height):
-    #     # Create an empty grid
-    #     self.grid = Grid(width, height)
-
-    #     # Generate the surrounding walls
-    #     self.grid.wall_rect(0, 0, width, height)
-
-    #     x = np.arange(4, 60, 8)
-    #     # y = np.arange(4, 44, 10)
-    #     y = np.arange(4, 60, 8)
-    #     # xx, yy = np.meshgrid(x, y)
-    #     # Generate rooms
-    #     for i in range(0, len(x)):
-    #         for j in range(0, len(y)):
-    #             self.grid.wall_rect(x[i], y[j], 5, 5)
-
-
-    #     # CHECK if GOAL lies inside room or on walls.
-    #     gp=self.goal_pos
-    #     while(self.check_room(gp) and self.check_mid(gp)):
-    #         gp=(random.randint(1,59), random.randint(1,59))
-    #     self.goal_pos=gp
-
-    #     gp=self.agent_start_pos
-    #     while(self.check_room(gp) and self.check_mid(gp)):
-    #         gp=(random.randint(1,59), random.randint(1,59))
-    #     self.agent_start_pos=gp
-        
-
-    #     # Place a goal square at a random location
-    #     self.grid.set(self.goal_pos[0], self.goal_pos[1], Goal())
-
-    #     # CHECK if AGENT lies inside room or on walls.
-    #     # self.agent_start_pos !=:
-        
-
-    #     # Place the agent
-    #     if self.agent_start_pos is not None:
-    #         self.agent_pos = self.agent_start_pos
-    #         self.agent_dir = self.agent_start_dir
-    #     else:
-    #         self.place_agent()
-
-    #     # Place obstacles
-    #     self.obstacles = []
-    #     for i_obst in range(self.n_obstacles):
-    #         self.obstacles.append(Ball())
-    #         self.place_obj(self.obstacles[i_obst], max_tries=100)
-
-    #     self.mission = "get to the green goal square using human instructions"
 
 
     def update_humans(self):
@@ -515,12 +302,6 @@ class DynamicObstaclesEnv(MiniGridEnv):
                               return 1
         return 2
 
-    # def check_gateway():
-    #     # Write code for gateway point region detection
-
-
-    #     return self.gateway_detect
-
 
     def check_end(self):
           # a=self.grid.get(*self.front_pos)
@@ -561,6 +342,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
 
         return obs
+
 
     def step(self, action):
 
@@ -606,6 +388,9 @@ class DynamicObstaclesEnv(MiniGridEnv):
         elif (self.check_human() != 1) and (cur_act == 4):
             r_i = -5
 
+        elif (self.check_human() == 1) and (cur_act == 4):
+            self.commands = get_command(self.agent_pos, self.agent_dir,self.goal_pos)[0]
+            self.confidence = get_command(self.agent_pos, self.agent_dir,self.goal_pos)[1]
         else:
             r_i = 0
 
@@ -669,6 +454,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
             done = True
 
         print("Reward is {}".format(reward))
+        print("Observation is {}".format(obs))
 
         info = {}
 
