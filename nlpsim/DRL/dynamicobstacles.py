@@ -71,7 +71,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.NI_max = 10
 
         self.NG_min = 0
-        self.NG_max = 10
+        self.NG_max = 15
 
         self.DH_min = 0
         self.DH_max = 1
@@ -83,8 +83,11 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.n_stacked_frames = 1
 
 
-        low = np.array([self.h_l_min, self.h_l_min, self.h_l_min, self.h_l_min, self.h_c_min, self.NI_min, self.NG_min, self.DH_min, self.DG_min])
-        high = np.array([self.h_l_max, self.h_l_max, self.h_l_max, self.h_l_max, self.h_c_max, self.NI_max, self.NG_max, self.DH_max, self.DG_max])
+        self.distance_min = 0
+        self.distance_max = 100
+
+        low = np.array([self.h_l_min, self.h_l_min, self.h_l_min, self.h_l_min, self.h_c_min, self.NI_min, self.NG_min, self.DH_min, self.DG_min, self.distance_min])
+        high = np.array([self.h_l_max, self.h_l_max, self.h_l_max, self.h_l_max, self.h_c_max, self.NI_max, self.NG_max, self.DH_max, self.DG_max, self.distance_max])
 
 
         self.time_elapse = 0
@@ -106,10 +109,18 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.IMAX = 4
         self.IMIN = 2
 
-        self.GMAX = 10
+        self.GMAX = 15
         self.GMIN = 4
 
         self.r_t = 0
+
+        self.r_i = 0
+
+        self.r_g = 0
+
+        self.r_soc = 0
+
+        self.r_wall = 0
 
         super().__init__(
             grid_size=size,
@@ -122,7 +133,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         self.carrying = None
 
-        self.reward_range = (-1000, 1000)
+        self.reward_range = (-2000, 2000)
 
         self.action_space = spaces.Discrete(50) # L*10, R*10, U*10, D*10, I*10
 
@@ -142,6 +153,24 @@ class DynamicObstaclesEnv(MiniGridEnv):
         """
 
         return self.agent_pos - self.dir_vec
+
+    @property
+    def left_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.agent_pos - self.right_vec
+
+
+    @property
+    def right_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.agent_pos + self.right_vec
+
 
     def init_cmd(self):
         self.commands = [10, 10, 10, 10]
@@ -277,9 +306,8 @@ class DynamicObstaclesEnv(MiniGridEnv):
         not_clear = front_cell and front_cell.type != 'goal'
         if front_cell is not None:
             if(front_cell.type == 'ball'):
-                if self.human_detect == 0:
-                   self.human_detect = 1
-                   return 1
+               self.human_detect = 1
+               return 1
         self.human_detect = 0
         return 2
 
@@ -333,7 +361,9 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         # obs = np.zeros(np.shape(self.observation_space))
 
-        obs = np.hstack((self.commands, self.confidence, self.icount, self.gcount, self.human_detect, self.gateway_detect))
+        self.distance = np.linalg.norm(np.array(self.goal_pos) - np.array(self.agent_pos))
+
+        obs = np.hstack((self.commands, self.confidence, self.icount, self.gcount, self.human_detect, self.gateway_detect, self.distance))
 
         # print("Shape of obs is {}. Obs is {}".format(np.shape(obs), obs))
 
@@ -383,6 +413,39 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         return done
 
+
+    def goal_check(self):
+
+        # front_cell = self.grid.get(*self.front_pos)
+        # cur_cell = self.grid.get(*self.agent_pos)
+        # right_cell = self.grid.get(*self.right_pos)
+        # left_cell = self.grid.get(*self.left_pos)
+
+        self.distance = np.linalg.norm(np.array(self.goal_pos) - np.array(self.agent_pos))
+
+        if self.distance <= 1.5:
+            self.r_t += 500
+            # print("Reached Goal. Carrying out step and ending episode.")
+            return True
+        else:
+            # self.r_t += -10
+            return False
+
+        # if front_cell is not None:
+        #     if cur_cell is not None:
+        #         if right_cell is not None:
+        #             if left_cell is not None:
+        #                 if (front_cell == 'goal') or (cur_cell == 'goal') or (right_cell == 'goal') or (left_cell == 'goal'):
+        #                     self.r_t = 500
+        #                     print("Reached Goal. Carrying out step and ending episode.")
+        #                     self.step(100)
+        #                     return True
+        #                 else:
+        #                     self.r_t = -10
+        #                     return False
+
+
+
     def event_control(self):
 
         # print("Time elapse now is {}".format(self.time_elapse))
@@ -394,21 +457,13 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.render('human')
         flag = False
         done = False
+        checkval = False
         self.update_humans()
 
         done = self.move(2)
+        checkval = self.goal_check()
         done = self.move(2)
-
-        front_cell = self.grid.get(*self.front_pos)        
-        if front_cell is not None:
-            if front_cell == 'goal':
-                self.r_t = 500
-                "Reached Goal. Carrying out step and ending episode."
-                self.step(100)
-
-            else:
-                self.r_t = -10
-
+        checkval = self.goal_check()
 
         # condition = (self.check_human()==1) or (self.check_gateway()==1)
 
@@ -430,16 +485,26 @@ class DynamicObstaclesEnv(MiniGridEnv):
         #         print("Goal REACHED!")
         #         done = True
 
-        return done
+        return checkval
 
+
+    def emulate_check_human(self):
+        # Function for emulating human found at intersection.
+        print("Found FAKE human!")
+        # self.gcount -= 1
+        self.human_detect = 1
+        # self.icount += 1
+
+        return True
 
     def step(self, action):
 
+        done = False
+        checkval = False
         time_init = time.time()
         while True:
             # print("Time elapse now is {}".format(self.time_elapse))
             self.render('human')
-            done = False
             self.update_humans()
 
             if self.check_human() == 1:
@@ -447,6 +512,8 @@ class DynamicObstaclesEnv(MiniGridEnv):
                 # if self.time_elapse > self.TIMENUM:
                 break
             if self.check_gateway() == 1:
+                if (self.gcount % 4)==0:
+                    retval = self.emulate_check_human()
                 # if self.time_elapse > self.TIMENUM:
                 break
             
@@ -455,9 +522,13 @@ class DynamicObstaclesEnv(MiniGridEnv):
                 obs = self.generate_obs()
                 return obs, -1000, True, {}
 
-            self.event_control()
+            checkval = self.event_control()
+            if checkval == True:
+                action = 100
+                break
             # print("Waiting for state change")
 
+        self.r_g = 0
 
         if action in np.arange(0,10):
             # Right Action
@@ -498,27 +569,38 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
 
         else:
+            cur_act = 5
             print("Reached Goal!")
-            obs = self.generate_obs()
-            return obs, 1000, True, {}
+            done = True
+        # if front_cell is not None:
+        #     if front_cell == 'goal' or cur_cell=='goal':
+            if (self.gcount == self.GMIN):
+                self.r_g += 500
+
+            elif (self.gcount > self.GMIN):
+                self.r_g += -10*(self.gcount - self.GMIN)
+
+            else:
+                self.r_g += 0
+
+            print("Optimal goal rewad is {}".format(self.r_g))
 
 
-        act_dic = {0:"RIGHT", 1: "DOWN", 2:"LEFT", 3:"UP", 4: "INTERACTION!"}
+        act_dic = {0:"RIGHT", 1: "DOWN", 2:"LEFT", 3:"UP", 4: "INTERACTION!", 5: "Reached Goal"}
 
         print("Executed action {}".format(str(act_dic[cur_act])))
 
-        done = False
         # Reward Definitions:
 
         # Interactive Reward
 
         if (self.human_detect == 1) and (self.icount < self.IMIN) and (cur_act!=4):
             print("COULDVE INTERACTED BUT DID NOT! BOOHOO!")
-            r_i = -500
+            self.r_i += -500
 
         elif (self.human_detect != 1) and (cur_act == 4):
             print("WRONG ACTION AT INTERSECTION!")
-            r_i = -500
+            self.r_i += -500
 
         elif (self.human_detect == 1) and (cur_act == 4):
             self.commands = get_command(self.agent_pos, self.agent_dir,self.goal_pos)[0]
@@ -531,78 +613,76 @@ class DynamicObstaclesEnv(MiniGridEnv):
             if len(self.commands)>4:
                 self.commands = self.commands[:4]
 
-            r_i = 500
+            self.r_i += 1000
+            self.gcount = 0
         else:
-            r_i = 0
+            self.r_i += 0
 
-
-        # Target Reward
-
-        r_t = self.r_t
+        # Target Reward defined in goal reach function
 
         # Delay Penalty
-        r_g = 0
-        front_cell = self.grid.get(*self.front_pos)
-
-        if front_cell is not None:
-            if front_cell == 'goal':
-                if (self.gcount == self.GMIN):
-                    r_g = 200
-                    done = True
-
-                elif (self.gcount > self.GMIN):
-                    r_g = -10*(self.gcount - self.GMIN)
-
-                else:
-                    r_g = 0
 
         if self.gcount>(self.GMAX)/4:
-            r_g = -200
+            self.r_g += -25
+        elif self.gcount>(self.GMAX)/2:
+            self.r_g += -50
 
         if self.gcount>self.GMAX:
             print("Ending Episode due to too many intersections!")
             obs = self.generate_obs()
-            return obs, -1000, True, {}
+            return obs, -200, True, {}
 
         # Social Reward
 
         if cur_act == self.commands[0]:
             temp = list(self.commands)
             temp.pop(0)
-            temp = temp.append(10)
+            temp.append(10)
             self.commands = np.array(temp)
 
-            r_soc = 1000
+            self.r_soc += 1000
 
             if self.confidence >= tau_r:
-                r_soc = 100
+                self.r_soc += 100
 
             if self.confidence < tau_r:
-                r_soc = -100
+                self.r_soc += -100
 
         else:
-            r_soc = 0
+            self.r_soc += 0
 
         # Check if there is a human in front of the agent
         # front_cell = self.grid.get(*self.front_pos)
         # not_clear = front_cell and front_cell.type != 'goal'
 
         # If the agent tried to walk over an obstacle or wall
+        front_cell = self.grid.get(*self.front_pos)
         r_wall = 0
         if front_cell is not None:
             if cur_act == 3 and front_cell == 'ball' or front_cell == 'wall':
-                r_wall = -1000
+                self.r_wall += -1000
                 done = True
 
-        reward = r_i + r_t + r_g + r_soc + r_wall
+
+        # Distance Reward
+        self.distance = np.linalg.norm(np.array(self.goal_pos) - np.array(self.agent_pos))
+
+        self.r_dist = -self.distance*1.5
+
+
+        reward = self.r_i + self.r_t + self.r_g + self.r_soc + self.r_wall + self.r_dist
 
         obs = self.generate_obs()
 
         self.time_elapse = 0
         # print("Time elapse now is {}".format(self.time_elapse))
-        print("Rewards are r_i: {}, r_t: {}, r_g: {}, r_soc: {}, r_wall: {}, total = {}".format(r_i, r_t, r_g, r_soc, r_wall, reward))
+        print("Rewards are r_i: {}, r_t: {}, r_g: {}, r_soc: {}, r_wall: {}, r_dist: {} total = {}".format(self.r_i, self.r_t, self.r_g, self.r_soc, self.r_wall, self.r_dist, reward))
         # print("Robot Trust metric is {}".format(tau_r))
         print("Observation is {}".format(obs))
+
+        if reward<-2000:
+            print("Wow. Very bad bot.")
+            done = True
 
         info = {}
 
@@ -618,6 +698,10 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         self.init_cmd()
 
+        self.agent_start_pos = (random.randint(1,59), random.randint(1,59))
+
+        self.goal_pos = (random.randint(1,59), random.randint(1,59))
+
         self._gen_grid(self.width, self.height)
 
         self.commands = [10, 10, 10, 10]
@@ -629,6 +713,16 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         self.gcount = 0
         self.icount = 0
+
+        self.r_t = 0
+
+        self.r_i = 0
+
+        self.r_g = 0
+
+        self.r_soc = 0
+
+        self.r_wall = 0
 
         # # These fields should be defined by _gen_grid
         # assert self.agent_pos is not None
