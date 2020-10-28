@@ -10,6 +10,7 @@ from stable_baselines.common.env_checker import check_env
 from stable_baselines import PPO2
 import tensorboardX
 import sys
+import torch
 
 import numpy as np
 import gym
@@ -18,6 +19,7 @@ from gym_minigrid.wrappers import *
 from gym_minigrid.window import Window
 
 import logging
+import os
 
 # Parse arguments
 
@@ -30,6 +32,17 @@ class CustomPolicy(FeedForwardPolicy):
 
 
 #Utility Functions
+
+def create_folders_if_necessary(path):
+    dirname = os.path.dirname(path)
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+
+
+def get_status_path(model_dir):
+    return os.path.join(model_dir, "status.pt")
+
+
 def get_status(model_dir):
     path = get_status_path(model_dir)
     return torch.load(path)
@@ -39,9 +52,15 @@ def make_env(env_key, seed=None):
     env.seed(seed)
     return env
 
+def get_storage_dir():
+    if "RL_STORAGE" in os.environ:
+        return os.environ["RL_STORAGE"]
+    return "storage"
+
+
 def get_txt_logger(model_dir):
     path = os.path.join(model_dir, "log.txt")
-    utils.create_folders_if_necessary(path)
+    create_folders_if_necessary(path)
 
     logging.basicConfig(
         level=logging.INFO,
@@ -59,6 +78,9 @@ def create_folders_if_necessary(path):
     if not os.path.isdir(dirname):
         os.makedirs(dirname)
 
+def get_model_dir(model_name):
+    return os.path.join(get_storage_dir(), model_name)
+
 
 def train():
 
@@ -67,11 +89,11 @@ def train():
     default_model_name = "hricra_{}".format(date)
 
     model_name = default_model_name
-    model_dir = utils.get_model_dir(model_name)
+    model_dir = get_model_dir(model_name)
 
     # Load Tensorboard writer
     tb_writer = tensorboardX.SummaryWriter(model_dir)
-    txt_logger = utils.get_txt_logger(model_dir)
+    txt_logger = get_txt_logger(model_dir)
 
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -105,3 +127,7 @@ def train():
     algo = PPO2(CustomPolicy, envs[0], n_steps=900, ent_coef=0.01, learning_rate=0.0001, nminibatches=5, tensorboard_log="./logs/", verbose=1)
     algo.learn(total_timesteps=1000000)
     algo.save("hricra")
+
+
+if __name__ == '__main__':
+    train()
