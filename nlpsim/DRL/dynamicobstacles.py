@@ -237,9 +237,9 @@ class DynamicObstaclesEnv(MiniGridEnv):
         # Generate the surrounding walls
         self.grid.wall_rect(0, 0, width, height)
 
-        x = np.arange(4, 60, 8)
+        x = np.arange(4, 40, 8)
         # y = np.arange(4, 44, 10)
-        y = np.arange(4, 60, 8)
+        y = np.arange(4, 40, 8)
         # xx, yy = np.meshgrid(x, y)
         # Generate rooms
         for i in range(0, len(x)):
@@ -250,14 +250,14 @@ class DynamicObstaclesEnv(MiniGridEnv):
         # CHECK if GOAL lies inside room or on walls.
         gp=self.goal_pos
         while(not self.check_mid(gp)):
-            gp=(random.randint(1,59), random.randint(1,59))
+            gp=(random.randint(1,43), random.randint(1,43))
         # while(self.check_room(gp)):
         #     gp=(random.randint(1,59), random.randint(1,59))
         self.goal_pos=gp
 
         gp=self.agent_start_pos
         while(not self.check_mid(gp)):
-            gp=(random.randint(1,59), random.randint(1,59))
+            gp=(random.randint(1,43), random.randint(1,43))
         # while(self.check_room(gp)):
         #     gp=(random.randint(1,59), random.randint(1,59))
         self.agent_start_pos=gp
@@ -740,7 +740,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
 class DynamicObstaclesEnv30x30(DynamicObstaclesEnv):
     def __init__(self):
-        super().__init__(size=61, n_obstacles=60, agent_start_pos=(1, 1), agent_start_dir=(random.randint(0,3)), goal_pos=(random.randint(1,62), random.randint(1,62)))
+        super().__init__(size=45, n_obstacles=35, agent_start_pos=(1, 1), agent_start_dir=(random.randint(0,3)), goal_pos=(random.randint(1,43), random.randint(1,43)))
 
 register(
     id='MiniGrid-Dynamic-Obstacles-30x30-v0',
