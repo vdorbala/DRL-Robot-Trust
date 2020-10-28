@@ -71,11 +71,11 @@ def notroom(x):
         return a
 
 def distribution(start,goal):
-    if(distance(start,goal)<=6):
+    if(distance(start,goal)<=5):
         return [prob_dis[0],0]
-    if(6<distance(start,goal)<=12):
+    if(5<distance(start,goal)<=10):
         return [prob_dis[1],1]
-    if(12<distance(start,goal)<=15):
+    if(10<distance(start,goal)<=15):
         return [prob_dis[2],2]
     if(15<distance(start,goal)):
         return [prob_dis[3],3]
