@@ -397,6 +397,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.update_humans()
 
         done = self.move(2)
+        done = self.move(2)
 
         front_cell = self.grid.get(*self.front_pos)        
         if front_cell is not None:
@@ -566,10 +567,10 @@ class DynamicObstaclesEnv(MiniGridEnv):
         # Social Reward
 
         if cur_act == self.commands[0]:
-            temp = self.commands
+            temp = list(self.commands)
             temp.pop(0)
             temp = temp.append(10)
-            self.commands = temp
+            self.commands = np.array(temp)
 
             r_soc = 1000
 
@@ -645,7 +646,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
 class DynamicObstaclesEnv30x30(DynamicObstaclesEnv):
     def __init__(self):
-        super().__init__(size=61, n_obstacles=40, agent_start_pos=(1, 1), agent_start_dir=(random.randint(0,3)), goal_pos=(random.randint(1,62), random.randint(1,62)))
+        super().__init__(size=61, n_obstacles=60, agent_start_pos=(1, 1), agent_start_dir=(random.randint(0,3)), goal_pos=(random.randint(1,62), random.randint(1,62)))
 
 register(
     id='MiniGrid-Dynamic-Obstacles-30x30-v0',
