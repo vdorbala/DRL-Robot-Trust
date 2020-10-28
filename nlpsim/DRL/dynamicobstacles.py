@@ -29,6 +29,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
             n_obstacles=4,
             goal_pos=(15,15),
     ):
+
         self.agent_start_pos = agent_start_pos
         self.agent_start_dir = agent_start_dir
         self.goal_pos = goal_pos
@@ -45,12 +46,6 @@ class DynamicObstaclesEnv(MiniGridEnv):
         else:
             self.n_obstacles = int(size/2)
 
-        super().__init__(
-            grid_size=size,
-            max_steps=4 * size * size,
-            # Set this to True for maximum speed
-            see_through_walls=True,
-        )
         # Allow only 5 actions permitted: left (0), right (1), forward (2), backward(-1), and interact (7)
         self.action_space = spaces.Discrete(50) # L*10, R*10, U*10, D*10, I*10
         # self.action_space = [-1, 0, 1, 2, 7]
@@ -58,24 +53,6 @@ class DynamicObstaclesEnv(MiniGridEnv):
         print("Action space is {}".format(self.action_space))
 
         self.reward_range = (-200, 500)
-
-
-        # self.observation_space = spaces.Tuple((spaces.MultiDiscrete([(0, 3), (0, 3), (0, 3), (0, 3)]), 
-        #                                 spaces.Box(0,1,shape=(1,)),
-        #                                 spaces.Discrete(10),
-        #                                 spaces.Discrete(10),
-        #                                 spaces.Discrete(2),
-        #                                 spaces.Discrete(2)))
-
-
-        # self.observation_space = spaces.Dict({
-        #     'commands': spaces.MultiDiscrete([3, 3, 3, 3]),
-        #     'confidence': spaces.Box(0,1,shape=(1,)),
-        #     'icount': spaces.Discrete(10),
-        #     'gcount': spaces.Discrete(10),
-        #     'human_detect': spaces.Discrete(2),
-        #     'gateway_detect': spaces.Discrete(2)
-        # })
 
         self.h_l1_min = -4
         self.h_l1_max = 4
@@ -125,6 +102,13 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         self.IMAX = 4
         self.IMIN = 2
+
+        super().__init__(
+            grid_size=size,
+            max_steps=4 * size * size,
+            # Set this to True for maximum speed
+            see_through_walls=True,
+        )
 
     @property
     def front_pos(self):
@@ -271,16 +255,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
 
     def check_human(self):
-        # front_cell = self.grid.get(self.front_pos[0],self.front_pos[1])
-        # front_cell = self.front_pos
-        # print("front_cell",front_cell)
-        # not_clear = False
-        # front_cell = self.grid.get(*self.front_pos)
-        # if front_cell!=None:
-        #     print('ball found is ',front_cell.type)
-        #     not_clear = front_cell.type == 'ball' and front_cell.type != 'goal'
-        # not_clear = front_cell.type != 'goal'  and  front_cell.type ==  'ball'
-        # 
+
         front_cell = self.grid.get(*self.front_pos)
         print("front cell is ",front_cell)
         not_clear = front_cell and front_cell.type != 'goal'
@@ -344,10 +319,94 @@ class DynamicObstaclesEnv(MiniGridEnv):
         return obs
 
 
+
+    def move(self, act):
+        reward = 0
+        done = False
+
+        # Get the position in front of the agent
+        fwd_pos = env.front_pos
+
+        # Get the postion behind the agent
+        back_pos = env.back_pos
+
+        # Get the contents of the cell in front of the agent
+        fwd_cell = env.grid.get(*fwd_pos)
+
+        # Get the contents of the cell behind the agent
+        back_cell = env.grid.get(*back_pos)
+
+        # Rotate left
+        if act == 0:
+            env.agent_dir -= 1
+            if env.agent_dir < 0:
+                env.agent_dir += 4
+
+        # Rotate right
+        elif act == 1:
+            env.agent_dir = (env.agent_dir + 1) % 4
+
+        # Move forward
+        elif act == 2:
+            if fwd_cell == None or fwd_cell.can_overlap():
+                env.agent_pos = fwd_pos
+            if fwd_cell != None and fwd_cell.type == 'goal':
+                done = True
+                reward = env._reward()
+            if fwd_cell != None and fwd_cell.type == 'lava':
+                done = True
+
+        # Move backward
+        elif act == 3:
+            if back_cell == None or back_cell.can_overlap():
+                env.agent_pos = back_pos
+            if back_cell != None and back_cell.type == 'goal':
+                done = True
+                reward = self._reward()
+            if back_cell != None and back_cell.type == 'lava':
+                done = True
+
+        return done
+
+    def event_control(self):
+        self.render('human')
+        flag = False
+        done = False
+        self.update_humans()
+
+        condition = (self.check_human()==1) or (self.check_gateway()==1)
+
+        if (condition==True) and (flag==False):
+            self.move(np.random.randint(0,3))
+            flag=True
+        else:
+            # print("Exploring till I find gateway or human!")
+            done = move(2)
+            done = move(2)
+
+            if (condition==False):
+                flag = False
+
+            if (self.check_end()==1):
+                reset()
+
+            elif(self.check_end()==0):
+                print("Goal REACHED!")
+                done = True
+
+        print("In this function")
+
+        return done
+
+
+
+
     def step(self, action):
 
+        print("Stepping")
         while((self.check_human()!=1) or (self.check_gateway() != 1)):
-            pass
+            done = self.event_control()
+
 
         print("Triggering new state now!")
 
@@ -415,7 +474,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
                     r_g = 200
                     done = True
 
-                elif (self.gcount > self.GMIN)
+                elif (self.gcount > self.GMIN):
                     r_g = -10*(self.gcount - self.GMIN)
 
                 else:
@@ -466,23 +525,30 @@ class DynamicObstaclesEnv(MiniGridEnv):
     #     return np.zeros(np.shape(self.observation_space))
 
 
-    def redraw(img):
-        if not args.agent_view:
-            img = self.render('rgb_array', tile_size=args.tile_size)
+    def redraw(self, img):
 
         self.window.show_img(img)
 
-    def reset():
-        if args.seed != -1:
-            self.seed(args.seed)
+    def reset(self):
+        self.seed(1)
 
-        obs = self.reset()
+        self.init_cmd()
 
-        if hasattr(self, 'mission'):
-            print('Mission: %s' % env.mission)
-            self.window.set_caption(env.mission)
+        self._gen_grid(self.width, self.height)
 
-        redraw(obs)
+        # These fields should be defined by _gen_grid
+        assert self.agent_pos is not None
+        assert self.agent_dir is not None
+
+        # Check that the agent doesn't overlap with an object
+        start_cell = self.grid.get(*self.agent_pos)
+        assert start_cell is None or start_cell.can_overlap()
+
+
+        obs = self.generate_obs()
+        # self.redraw()
+
+        return obs
 
 class DynamicObstaclesEnv30x30(DynamicObstaclesEnv):
     def __init__(self):
