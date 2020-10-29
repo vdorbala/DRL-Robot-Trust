@@ -304,6 +304,6 @@ def get_command(agentpos, agentdir, goalpos):
         # use goal_command for global command directions start symbol is the orientation change
         # use out[0][0]) for correspondind prob distribution
 
-        return [str_nparray(goal_command), out[0][1]]
+        return [str_nparray(goal_command), out[0][1],len(goal_command)]
 
 

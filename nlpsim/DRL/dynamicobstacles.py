@@ -34,6 +34,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.agent_start_pos = agent_start_pos
         self.agent_start_dir = agent_start_dir
         self.goal_pos = goal_pos
+        self.mincommand = 1
       
         # Number of cells (width and height) in the agent view
         # assert self.agent_view_size % 2 == 1
@@ -308,33 +309,74 @@ class DynamicObstaclesEnv(MiniGridEnv):
             except:
                 pass
 
-    # def check_human(self):
+def check_human(self):
+        r=[]
+        try:
+          f = self.grid.get(*self.front_pos)
+          r.append(f)
+        except:
+            pass
+        try:
+          re = self.grid.get(*self.right_pos)
+          r.append(re)
+        except:
+            pass
+        try:
+          l = self.grid.get(*self.left_pos)
+          r.append(l)
+        except:
+            pass
 
-    #     print("Pose is {}".format(super().tf_pos))
-    #     print("Position si {}".format(super().agent_sees(super().tf_pos[0], super().tf_pos[1])))
+        try:
+          fr = self.grid.get(*self.fr_pos)
+          r.append(fr)
+        except:
+            pass
+        try:
+          fl = self.grid.get(*self.fl_pos)
+          r.append(fl)
+        except:
+            pass
 
-    #     # f = self.grid.get(*self.front_pos)
-    #     # r = self.grid.get(*self.right_pos)
-    #     # l = self.grid.get(*self.left_pos)
-    #     # fr = self.grid.get(*self.fr_pos)
-    #     # fl = self.grid.get(*self.fl_pos)
-    #     # sf = self.grid.get(*self.sf_pos)
-    #     # sr = self.grid.get(*self.sr_pos)
-    #     # sl = self.grid.get(*self.sl_pos)
-    #     # tf = self.grid.get(*self.tf_pos)
-    #     # tr = self.grid.get(*self.tr_pos)
-    #     # tl = self.grid.get(*self.tl_pos)
-
-
-    #     # r=[f,r,l,fr,fl,sf,sr,sl,tf,tr,tl]
-    #     # for i in r:
-    #     #     if(i is not None):
-    #     #         if(i.type == 'ball'):
-    #     #             self.human_detect = 1
-    #     #             return 1
-    #     # self.human_detect = 0
-    #     # return 2
-        # return 2
+        try:
+          sf = self.grid.get(*self.sf_pos)
+          r.append(sf)
+        except:
+            pass
+        try:
+          sr = self.grid.get(*self.sr_pos)
+          r.append(sr)
+        except:
+            pass
+        try:
+          sl = self.grid.get(*self.sl_pos)
+          r.append(sl)
+        except:
+            pass
+        try:
+          tf = self.grid.get(*self.tf_pos)
+          r.append(tf)
+        except:
+            pass
+        try:
+          tr = self.grid.get(*self.tr_pos)
+          r.append(tr)
+        except:
+            pass
+        try:
+          tl = self.grid.get(*self.tl_pos)
+          r.append(tl)
+        except:
+            pass
+        if len(r)<1:
+            return 2
+        for i in r:
+            if(i is not None):
+                if(i.type == 'ball'):
+                    self.human_detect = 1
+                    return 1
+        self.human_detect = 0
+        return 2
     def check_human(self):
 
         front_cell = self.grid.get(*self.front_pos)
@@ -522,12 +564,15 @@ class DynamicObstaclesEnv(MiniGridEnv):
         # self.icount += 1
 
         return True
+    def get_min_cmd(self):
+        self.mincommand=get_command(self.agent_start_pos, self.agent_start_dir,self.goal_pos)[2]
 
     def step(self, action):
 
         done = False
         checkval = False
         time_init = time.time()
+        self.mincommand()
         while True:
             # print("Time elapse now is {}".format(self.time_elapse))
             self.render('human')
