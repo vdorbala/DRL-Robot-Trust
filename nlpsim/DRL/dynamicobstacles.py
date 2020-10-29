@@ -305,17 +305,37 @@ class DynamicObstaclesEnv(MiniGridEnv):
                 pass
 
 
-    def check_human(self):
+#     def check_human(self):
 
-        front_cell = self.grid.get(*self.front_pos)
-        not_clear = front_cell and front_cell.type != 'goal'
-        if front_cell is not None:
-            if(front_cell.type == 'ball'):
-               self.human_detect = 1
-               return 1
+#         front_cell = self.grid.get(*self.front_pos)
+#         not_clear = front_cell and front_cell.type != 'goal'
+#         if front_cell is not None:
+#             if(front_cell.type == 'ball'):
+#                self.human_detect = 1
+#                return 1
+#         self.human_detect = 0
+#         return 2
+
+   def check_human(self):
+        f = self.grid.get(*self.front_pos)
+        r = self.grid.get(*self.right_pos)
+        l = self.grid.get(*self.left_pos)
+        fr = self.grid.get(*self.fr_pos)
+        fl = self.grid.get(*self.fl_pos)
+        sf = self.grid.get(*self.sf_pos)
+        sr = self.grid.get(*self.sr_pos)
+        sl = self.grid.get(*self.sl_pos)
+        tf = self.grid.get(*self.tf_pos)
+        tr = self.grid.get(*self.tr_pos)
+        tl = self.grid.get(*self.tl_pos)
+        r=[f,r,l,fr,fl,sf,sr,sl,tf,tr,tl]
+        for i in r:
+            if(i is not None):
+                if(i.type == 'ball'):
+                    self.human_detect = 1
+                    return 1
         self.human_detect = 0
         return 2
-
     def check_gateway(self):
           # a=self.grid.get(*self.front_pos)
         a=self.agent_pos
