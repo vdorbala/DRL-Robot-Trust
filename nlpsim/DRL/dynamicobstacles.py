@@ -10,7 +10,7 @@ import time
 # from gym_minigrid.envs.gen_cmd import get_dir,get_conf
 
 
-from gym_minigrid.envs.maze import maze,m2g, gazebo ,inter_x,mid_x
+from gym_minigrid.envs.maze import maze,m2g, gazebo ,inter_x,mid_x, mx
 from gym_minigrid.envs.pathplan import astar
 # from gym_minigrid.envs.pos import check_room,check_mid
 
@@ -175,14 +175,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
     def init_cmd(self):
         self.commands = [10, 10, 10, 10]
 
-    def check_room(gp):
-        x = np.arange(4, 60, 8)
-        for i in x:
-              if(i<=gp[0]<i+5):
-                  for j in x:
-                      if (j<=gp[1]<j+5):
-                              return True
-        return False
+
     # def check_mid(self, gp):
     #     if(gp[0] in inter_x) or (gp[1] in inter_x) :
     #             return True
@@ -193,7 +186,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
         return False
 
     def check_room(self, gp):
-        x = np.arange(4, 60, 8)
+        x = np.arange(4, 40, 8)
         for i in x:
               if(i<=gp[0]<i+5):
                   for j in x:
@@ -225,9 +218,28 @@ class DynamicObstaclesEnv(MiniGridEnv):
                     return tuple(m2g[self.get_key([b[idx], b[idy]],gazebo)])
 
     def check_mid(self, gp):
-        if((gp[0] in mid_x[1:-2]) and (gp[1] in mid_x[1:-2])):
+        if((gp[0] in mx) and (gp[1] in mx)):
                 return True
         return False
+
+
+    def check_spawn(self):
+        gp=self.goal_pos
+
+
+        while not self.check_mid(gp):
+            gp=(random.randint(1,43), random.randint(1,43))
+        # while(self.check_room(gp)):
+        #     gp=(random.randint(1,59), random.randint(1,59))
+        self.goal_pos=gp
+
+        gp=self.agent_start_pos
+        while not self.check_mid(gp):
+            gp=(random.randint(1,43), random.randint(1,43))
+        # while(self.check_room(gp)):
+        #     gp=(random.randint(1,59), random.randint(1,59))
+        self.agent_start_pos=gp
+        return True
 
 
     def _gen_grid(self, width, height):
@@ -248,20 +260,13 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
 
         # CHECK if GOAL lies inside room or on walls.
-        gp=self.goal_pos
-        while(not self.check_mid(gp)):
-            gp=(random.randint(1,43), random.randint(1,43))
-        # while(self.check_room(gp)):
-        #     gp=(random.randint(1,59), random.randint(1,59))
-        self.goal_pos=gp
-
-        gp=self.agent_start_pos
-        while(not self.check_mid(gp)):
-            gp=(random.randint(1,43), random.randint(1,43))
-        # while(self.check_room(gp)):
-        #     gp=(random.randint(1,59), random.randint(1,59))
-        self.agent_start_pos=gp
-        
+        while True:
+            self.check_spawn()
+            if self.agent_start_pos != self.goal_pos:
+                break
+            else:
+                self.agent_start_pos=(random.randint(1,43), random.randint(1,43))
+                self.goal_pos=(random.randint(1,43), random.randint(1,43))
 
         # Place a goal square at a random location
         self.grid.set(self.goal_pos[0], self.goal_pos[1], Goal())
@@ -490,7 +495,6 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
     def emulate_check_human(self):
         # Function for emulating human found at intersection.
-        print("Found FAKE human!")
         # self.gcount -= 1
         self.human_detect = 1
         # self.icount += 1
@@ -512,7 +516,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
                 # if self.time_elapse > self.TIMENUM:
                 break
             if self.check_gateway() == 1:
-                if (self.gcount % 4)==0:
+                if (self.gcount % 4)==0 and (self.icount==0):
                     retval = self.emulate_check_human()
                 # if self.time_elapse > self.TIMENUM:
                 break
@@ -609,7 +613,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
             # Length check
             if len(self.commands)<4:
                 while (4 - len(self.commands))>0:
-                    self.commands = np.append(self.commands, np.random.randint(0,4))
+                    self.commands = np.append(self.commands, 10)
             if len(self.commands)>4:
                 self.commands = self.commands[:4]
 
