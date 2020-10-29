@@ -110,7 +110,8 @@ class DynamicObstaclesEnv(MiniGridEnv):
         self.IMAX = 4
         self.IMIN = 2
 
-        self.GMAX = 15
+        self.GMAX=get_command(self.agent_start_pos, self.agent_start_dir,self.goal_pos)[2] + 5
+        # self.GMAX = 15
         self.GMIN = 4
 
         self.r_t = 0
@@ -309,84 +310,84 @@ class DynamicObstaclesEnv(MiniGridEnv):
             except:
                 pass
 
-def check_human(self):
-        r=[]
-        try:
-          f = self.grid.get(*self.front_pos)
-          r.append(f)
-        except:
-            pass
-        try:
-          re = self.grid.get(*self.right_pos)
-          r.append(re)
-        except:
-            pass
-        try:
-          l = self.grid.get(*self.left_pos)
-          r.append(l)
-        except:
-            pass
-
-        try:
-          fr = self.grid.get(*self.fr_pos)
-          r.append(fr)
-        except:
-            pass
-        try:
-          fl = self.grid.get(*self.fl_pos)
-          r.append(fl)
-        except:
-            pass
-
-        try:
-          sf = self.grid.get(*self.sf_pos)
-          r.append(sf)
-        except:
-            pass
-        try:
-          sr = self.grid.get(*self.sr_pos)
-          r.append(sr)
-        except:
-            pass
-        try:
-          sl = self.grid.get(*self.sl_pos)
-          r.append(sl)
-        except:
-            pass
-        try:
-          tf = self.grid.get(*self.tf_pos)
-          r.append(tf)
-        except:
-            pass
-        try:
-          tr = self.grid.get(*self.tr_pos)
-          r.append(tr)
-        except:
-            pass
-        try:
-          tl = self.grid.get(*self.tl_pos)
-          r.append(tl)
-        except:
-            pass
-        if len(r)<1:
-            return 2
-        for i in r:
-            if(i is not None):
-                if(i.type == 'ball'):
-                    self.human_detect = 1
-                    return 1
-        self.human_detect = 0
-        return 2
     def check_human(self):
+            r=[]
+            try:
+              f = self.grid.get(*self.front_pos)
+              r.append(f)
+            except:
+                pass
+            try:
+              re = self.grid.get(*self.right_pos)
+              r.append(re)
+            except:
+                pass
+            try:
+              l = self.grid.get(*self.left_pos)
+              r.append(l)
+            except:
+                pass
 
-        front_cell = self.grid.get(*self.front_pos)
-        not_clear = front_cell and front_cell.type != 'goal'
-        if front_cell is not None:
-            if(front_cell.type == 'ball'):
-               self.human_detect = 1
-               return 1
-        self.human_detect = 0
-        return 2
+            try:
+              fr = self.grid.get(*self.fr_pos)
+              r.append(fr)
+            except:
+                pass
+            try:
+              fl = self.grid.get(*self.fl_pos)
+              r.append(fl)
+            except:
+                pass
+
+            try:
+              sf = self.grid.get(*self.sf_pos)
+              r.append(sf)
+            except:
+                pass
+            try:
+              sr = self.grid.get(*self.sr_pos)
+              r.append(sr)
+            except:
+                pass
+            try:
+              sl = self.grid.get(*self.sl_pos)
+              r.append(sl)
+            except:
+                pass
+            try:
+              tf = self.grid.get(*self.tf_pos)
+              r.append(tf)
+            except:
+                pass
+            try:
+              tr = self.grid.get(*self.tr_pos)
+              r.append(tr)
+            except:
+                pass
+            try:
+              tl = self.grid.get(*self.tl_pos)
+              r.append(tl)
+            except:
+                pass
+            if len(r)<1:
+                return 2
+            for i in r:
+                if(i is not None):
+                    if(i.type == 'ball'):
+                        self.human_detect = 1
+                        return 1
+            self.human_detect = 0
+            return 2
+    # def check_human(self):
+
+    #     front_cell = self.grid.get(*self.front_pos)
+    #     not_clear = front_cell and front_cell.type != 'goal'
+    #     if front_cell is not None:
+    #         if(front_cell.type == 'ball'):
+    #            self.human_detect = 1
+    #            return 1
+    #     self.human_detect = 0
+    #     return 2
 
     def check_gateway(self):
           # a=self.grid.get(*self.front_pos)
@@ -564,15 +565,15 @@ def check_human(self):
         # self.icount += 1
 
         return True
-    def get_min_cmd(self):
-        self.mincommand=get_command(self.agent_start_pos, self.agent_start_dir,self.goal_pos)[2]
+
+    # def get_min_cmd(self):
+        # self.GMAX=get_command(self.agent_start_pos, self.agent_start_dir,self.goal_pos)[2]
 
     def step(self, action):
 
         done = False
         checkval = False
         time_init = time.time()
-        self.mincommand()
         while True:
             # print("Time elapse now is {}".format(self.time_elapse))
             self.render('human')
@@ -794,7 +795,8 @@ def check_human(self):
         self.IMAX = 4
         self.IMIN = 2
 
-        self.GMAX = 15
+        self.GMAX=get_command(self.agent_start_pos, self.agent_start_dir,self.goal_pos)[2] + 5
+        # self.GMAX = 15
         self.GMIN = 4
 
         self.r_t = 0
