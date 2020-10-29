@@ -125,7 +125,7 @@ def train():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Load environments
 
-    env_id = 'MiniGrid-Dynamic-Obstacles-30x30-v0'
+    env_id = 'MiniGrid-Dynamic-Obstacles-40x40-v0'
 
     # envs = []
     # for i in range(1):
@@ -175,7 +175,7 @@ def train():
     for experiment in range(NUM_EXPERIMENTS):
         # it is recommended to run several experiments due to variability in results
         train_env.reset()
-        model = ALGO('MlpPolicy', train_env, n_steps=15, nminibatches=5, learning_rate=0.1, tensorboard_log="./vector_logs_new/", verbose=1)
+        model = ALGO('MlpPolicy', train_env, n_steps=15, nminibatches=5, learning_rate=0.001, tensorboard_log="./vector_logs_new/", verbose=1)
         start = time.time()
         model.learn(total_timesteps=TRAIN_STEPS)
         times.append(time.time() - start)

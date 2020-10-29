@@ -125,7 +125,7 @@ def train():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Load environments
 
-    env_id = 'MiniGrid-Dynamic-Obstacles-30x30-v0'
+    env_id = 'MiniGrid-Dynamic-Obstacles-40x40-v0'
 
     # envs = []
     # for i in range(1):
