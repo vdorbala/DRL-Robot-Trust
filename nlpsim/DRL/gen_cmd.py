@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 from gym_minigrid.envs.maze import maze,m2g, gazebo ,inter_x,mid_x
 from gym_minigrid.envs.pathplan import astar
@@ -26,10 +27,6 @@ Dict = {"U": {"L":"L","R":"R","U":"U","D":"D"}, "L": {"L":"U","R":"D","U":"R","D
 dir_vec={'R':0,'D':1,'L':2,'U':3}
 
 
-
-
-
-
 def str_nparray(st):
     lt=[]
     for i in st:
@@ -52,8 +49,8 @@ def prob_scores(goal):
         goal_prob=[init_prob[ipr]]
 
         if(len(goal)==1):
-            print('hi')
-            return goal_prob
+            # print('hi')
+            return [1.0,1.0]
         else:
             i=0
             while(len(goal_prob)<=len(goal)-1):
@@ -195,7 +192,7 @@ def distance(startCoordinate,goalCoordinate):
 
 
 def check_room(gp):
-    x = np.arange(4, 60, 8)
+    x = np.arange(4, 40, 8)
     for i in x:
           if(i<=gp[0]<i+5):
               for j in x:
@@ -227,7 +224,7 @@ def check_mid(gp):
 
 
 def get_command(agentpos, agentdir, goalpos):
-        print("In the commd")
+        # print("In the commd")
 
         startnode=gridclose(agentpos,inter_x)
 
@@ -238,17 +235,17 @@ def get_command(agentpos, agentdir, goalpos):
         # print(command(path,i_ori))
         goal_command=command(path,i_ori)
         confidence=distribution(startnode,endnode)
-        print(confidence)
+        # print(confidence)
 
         out=correct_prob(startnode,endnode,goal_command)
-        print("final prob distribution",out[0][0],"avg prob",out[0][1])
+        # print("final prob distribution",out[0][0],"avg prob",out[0][1])
         if (confidence[0]==1):
             path = astar(maze, startnode, endnode)
             goal_command=command(path,i_ori)
             goal_pt=endnode
-            print(command(path,i_ori))
+            # print(command(path,i_ori))
             out=correct_prob(startnode,goal_pt,goal_command)
-            print("final prob distribution",out[0][0],"avg prob",out[0][1])
+            # print("final prob distribution",out[0][0],"avg prob",out[0][1])
         probgoal=interneighbour(endnode,maze)
         if(confidence[0]==0.3):
             probgoal=farneighbour(endnode,maze)
@@ -268,7 +265,7 @@ def get_command(agentpos, agentdir, goalpos):
               count+=1
 
         dst.sort()
-        print(dst)
+        # print(dst)
         if(confidence[0]==0.75):
             if(len(dst)>2):
                ch=np.random.choice(dst[:int(len(dst)/2)+1], 1)[0]
@@ -277,9 +274,9 @@ def get_command(agentpos, agentdir, goalpos):
                ch=np.random.choice(dst, 1)[0]
             goal_command=get_key(ch,nonrepgoal)
             goal_pt=dd[ch]
-            print("goal_command",goal_command,goal_pt)
+            # print("goal_command",goal_command,goal_pt)
             out=correct_prob(startnode,goal_pt,goal_command)
-            print("final prob distribution",out[0][0],"avg prob",out[0][1])
+            # print("final prob distribution",out[0][0],"avg prob",out[0][1])
 
         if(confidence[0]==0.5):
             if(len(dst)>2):
@@ -288,17 +285,17 @@ def get_command(agentpos, agentdir, goalpos):
                 ch=np.random.choice(dst, 1)[0]
             goal_pt=dd[ch]
             goal_command=get_key(ch,nonrepgoal)
-            print("goal_command",goal_command,goal_pt)
+            # print("goal_command",goal_command,goal_pt)
             out=correct_prob(startnode,goal_pt,goal_command)
-            print("final prob distribution",out[0][0],"avg prob",out[0][1])
+            # print("final prob distribution",out[0][0],"avg prob",out[0][1])
 
         if(confidence[0]==0.3):
             ch=np.random.choice(dst, 1)[0]
             goal_pt=dd[ch]
             goal_command=get_key(ch,nonrepgoal)
-            print("goal_command",goal_command,goal_pt)
+            # print("goal_command",goal_command,goal_pt)
             out=correct_prob(startnode,goal_pt,goal_command)
-            print("final prob distribution",out[0][0],"avg prob",out[0][1])
+            # print("final prob distribution",out[0][0],"avg prob",out[0][1])
         # print("All possible goal")
         # print("command goal prob/dist from start to goal")
         # for i in nonrepgoal:
@@ -308,6 +305,5 @@ def get_command(agentpos, agentdir, goalpos):
         # use out[0][0]) for correspondind prob distribution
 
         return [str_nparray(goal_command), out[0][1]]
-
 
 
