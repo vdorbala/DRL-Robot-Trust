@@ -1003,6 +1003,78 @@ class MiniGridEnv(gym.Env):
 
         return self.agent_pos + self.dir_vec
 
+
+    @property
+    def right_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.agent_pos + self.right_vec
+    @property
+    def left_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.agent_pos - self.right_vec
+    @property
+    def fl_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.front_pos - self.right_vec
+    @property
+    def fr_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.front_pos + self.right_vec
+    @property
+    def sf_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.front_pos + self.dir_vec
+    @property
+    def sr_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.sf_pos + self.right_vec
+    @property
+    def sl_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.sf_pos - self.right_vec
+    @property
+    def tf_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.sf_pos + self.dir_vec
+    @property
+    def tr_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.tf_pos + self.right_vec
+    @property
+    def tl_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.tf_pos - self.right_vec
+
     @property
     def back_pos(self):
         """
