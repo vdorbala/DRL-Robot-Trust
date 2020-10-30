@@ -5,6 +5,7 @@ import datetime
 
 from stable_baselines.common.policies import FeedForwardPolicy, register_policy
 from stable_baselines.common.env_checker import check_env
+from stable_baselines.common.callbacks import BaseCallback
 
 # from stable_baselines.common.vec_env import SubprocVecEnv
 from stable_baselines import PPO2
@@ -20,6 +21,8 @@ from gym_minigrid.window import Window
 
 import logging
 import os
+
+import tensorflow as tf
 
 # Parse arguments
 
@@ -82,6 +85,37 @@ def get_model_dir(model_name):
     return os.path.join(get_storage_dir(), model_name)
 
 
+class TensorboardCallback(BaseCallback):
+    """
+    Custom callback for plotting additional values in tensorboard.
+    """
+    def __init__(self, verbose=0):
+        self.is_tb_set = False
+        super(TensorboardCallback, self).__init__(verbose)
+
+    def _on_step(self) -> bool:
+        # Log additional tensor
+        print(self.locals['infos'])
+        confval = self.locals['infos'][0]['confval']
+        distance = self.locals['infos'][0]['distance']
+        # print("Conf values was {}".format(confval))
+        # if not self.is_tb_set:
+        #     with self.model.graph.as_default():
+        #         tf.summary.scalar('value_target', tf.reduce_mean(self.model.value_target))
+        #         self.model.summary = tf.summary.merge_all()
+        #     self.is_tb_set = True
+        # Log scalar value (here a random variable)
+        value = confval
+        summary = tf.Summary(value=[tf.Summary.Value(tag='confidence_score', simple_value=value)])
+        self.locals['writer'].add_summary(summary, self.num_timesteps)
+        
+        value = distance
+        summary = tf.Summary(value=[tf.Summary.Value(tag='distance', simple_value=value)])
+        self.locals['writer'].add_summary(summary, self.num_timesteps)
+
+        return True
+
+
 def train():
 
     # Set run dir
@@ -124,8 +158,8 @@ def train():
 
     # Load algo
     algo = PPO2(CustomPolicy, envs[0], n_steps=10, ent_coef=0.01, learning_rate=0.01, nminibatches=5, tensorboard_log="./logs/", verbose=1)
-    algo.learn(total_timesteps=10)
-    algo.save("hricra_{}".format(time.time()))
+    algo.learn(total_timesteps=10, callback=TensorboardCallback())
+    algo.save("testlogs_{}".format(time.time()))
 
 
 if __name__ == '__main__':

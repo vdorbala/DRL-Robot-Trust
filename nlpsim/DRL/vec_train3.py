@@ -18,6 +18,9 @@ import tensorboardX
 import sys
 import torch
 
+from stable_baselines.common.callbacks import BaseCallback
+import tensorflow as tf
+
 
 import time
 import matplotlib.pyplot as plt
@@ -108,6 +111,47 @@ def make_env(env_id, rank, seed=0):
     return _init
 
 
+class TensorboardCallback(BaseCallback):
+    """
+    Custom callback for plotting additional values in tensorboard.
+    """
+    def __init__(self, verbose=0):
+        self.is_tb_set = False
+        super(TensorboardCallback, self).__init__(verbose)
+
+    def _on_step(self) -> bool:
+        # Log additional tensor
+        confval = 0
+        for i in range(0,16):
+            confval += self.locals['infos'][i]['confval']
+
+        confval = (confval/16)
+
+        distance = 0
+        for i in range(0,16):
+            distance += self.locals['infos'][i]['distance']
+
+        distance = (distance/16)
+        # confval = self.locals['infos'][0]['confval']
+        # distance = self.locals['infos'][0]['distance']
+        # print("Conf values was {}".format(confval))
+        # if not self.is_tb_set:
+        #     with self.model.graph.as_default():
+        #         tf.summary.scalar('value_target', tf.reduce_mean(self.model.value_target))
+        #         self.model.summary = tf.summary.merge_all()
+        #     self.is_tb_set = True
+        # Log scalar value (here a random variable)
+        value = confval
+        summary = tf.Summary(value=[tf.Summary.Value(tag='confidence_score', simple_value=value)])
+        self.locals['writer'].add_summary(summary, self.num_timesteps)
+        
+        value = distance
+        summary = tf.Summary(value=[tf.Summary.Value(tag='distance', simple_value=value)])
+        self.locals['writer'].add_summary(summary, self.num_timesteps)
+
+        return True
+
+
 def train():
 
     # Set run dir
@@ -151,7 +195,7 @@ def train():
     # The different number of processes that will be used
     PROCESSES_TO_TEST = [16] 
     NUM_EXPERIMENTS = 1 # RL algorithms can often be unstable, so we run several experiments (see https://arxiv.org/abs/1709.06560)
-    TRAIN_STEPS = 10000
+    TRAIN_STEPS = 20000
     # Number of episodes for evaluation
     EVAL_EPS = 100
     ALGO = PPO2
@@ -175,9 +219,9 @@ def train():
     for experiment in range(NUM_EXPERIMENTS):
         # it is recommended to run several experiments due to variability in results
         train_env.reset()
-        model = ALGO('MlpPolicy', train_env, n_steps=15, nminibatches=5, learning_rate=0.001, tensorboard_log="./vector_logs_new/", verbose=1)
+        model = ALGO('MlpPolicy', train_env, n_steps=15, nminibatches=5, learning_rate=0.1, tensorboard_log="./vector_logs_new3/", verbose=1)
         start = time.time()
-        model.learn(total_timesteps=TRAIN_STEPS)
+        model.learn(total_timesteps=TRAIN_STEPS, callback=TensorboardCallback())
         times.append(time.time() - start)
         mean_reward, _  = evaluate_policy(model, eval_env, n_eval_episodes=EVAL_EPS)
         rewards.append(mean_reward)
@@ -187,6 +231,7 @@ def train():
     reward_averages.append(np.mean(rewards))
     reward_std.append(np.std(rewards))
     training_times.append(np.mean(times))
+    model.save("hricra_train3_{}".format(time.time()))
 
     training_steps_per_second = [TRAIN_STEPS / t for t in training_times]
 
