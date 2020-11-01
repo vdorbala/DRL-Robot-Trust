@@ -505,7 +505,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         if self.distance <= 1.5:
             # WHAT WORKS: Test 1 - 300
-            self.r_t += 0.3
+            self.r_t += 300
             # print("Reached Goal. Carrying out step and ending episode.")
             return True
         else:
@@ -544,6 +544,8 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
     def step(self, action):
 
+        action = np.random.randint(0,50)
+
         done = False
         checkval = False
         time_init = time.time()
@@ -567,7 +569,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
                 obs = self.generate_obs()
                 info = {"confval": 0.0, "distance": self.distance}
                 # WHAT WORKS: Test 1 - -100
-                return obs, -0.1, True, info
+                return obs, -100, True, info
 
             checkval = self.event_control()
             if checkval == True:
@@ -627,11 +629,11 @@ class DynamicObstaclesEnv(MiniGridEnv):
         #     if front_cell == 'goal' or cur_cell=='goal':
             if (self.gcount <= self.GMIN):
                 # WHAT WORKS: Test 1 - 300
-                self.r_g += 0.3
+                self.r_g += 300
 
             elif (self.gcount > self.GMIN):
                 # WHAT WORKS: Test 1 - -5
-                self.r_g += -0.005*(self.gcount - self.GMIN)
+                self.r_g += -5*(self.gcount - self.GMIN)
 
             else:
                 # WHAT WORKS: Test 1 - 0
@@ -658,12 +660,12 @@ class DynamicObstaclesEnv(MiniGridEnv):
         if (self.human_detect == 1) and (self.icount < self.IMIN) and (cur_act!=4):
             print("COULDVE INTERACTED BUT DID NOT! BOOHOO!")
             # WHAT WORKS: Test 1 - -200
-            self.r_i += -0.2
+            self.r_i += -200
 
         elif (self.human_detect != 1) and (cur_act == 4):
             print("WRONG ACTION AT INTERSECTION!")
             # WHAT WORKS: Test 1 - -200
-            self.r_i += -0.2
+            self.r_i += -200
 
         elif (self.human_detect == 1) and (cur_act == 4):
             self.commands = get_command(self.agent_pos, self.agent_dir,self.goal_pos)[0]
@@ -677,7 +679,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
                 self.commands = self.commands[:4]
 
             # WHAT WORKS: Test 1 - 1000
-            self.r_i += 1
+            self.r_i += 1000
             self.gcount = 0
         else:
             # WHAT WORKS: Test 1 - 0
@@ -696,7 +698,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
             print("Ending Episode due to too many intersections!")
             # obs = self.generate_obs()
             # WHAT WORKS: Test 1 - -500
-            self.r_g += -0.5
+            self.r_g += -500
             done = True
             # return obs, -50, True, {}
 
@@ -711,15 +713,21 @@ class DynamicObstaclesEnv(MiniGridEnv):
             self.commands = np.array(temp)
 
             # WHAT WORKS: Test 1 - 1000
-            self.r_soc += 1
+            self.r_soc += 1000
 
-            if self.confidence >= tau_r:
-                # WHAT WORKS: Test 1 - 1000
-                self.r_conf += 1
+            if self.confidence!=tau_r:
+                self.r_conf += -50*(np.abs(self.confidence-tau_r))
 
-            if self.confidence < tau_r:
-                # WHAT WORKS: Test 1 - -500
-                self.r_conf += -0.3
+            else:
+                self.r_conf += 1000
+
+            # if self.confidence >= tau_r:
+            #     # WHAT WORKS: Test 1 - 1000
+            #     self.r_conf += 1000
+
+            # if self.confidence < tau_r:
+            #     # WHAT WORKS: Test 1 - -500
+            #     self.r_conf += -500
 
         else:
             # WHAT WORKS: Test 1 - 0
@@ -754,7 +762,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
         print("Observation is {}".format(obs))
 
         # WHAT WORKS: Test 1 - -2000
-        if reward<-2:
+        if reward<-2000:
             print("Wow. Very bad bot.")
             done = True
 
