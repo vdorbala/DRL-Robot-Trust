@@ -2,7 +2,9 @@
 
 
 ## Prerequisites:
-  1. Install Minigrid, and customize it as follows:
+  1. Install Tensorflow 1.4 - https://www.tensorflow.org/install/pip
+
+  2. Install Minigrid, and customize it as follows:
   
     1. ``` git clone https://github.com/maximecb/gym-minigrid.git ```
 
