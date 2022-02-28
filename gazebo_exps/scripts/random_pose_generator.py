@@ -6,7 +6,7 @@ import rospy
 import numpy as np
 
 from gazebo_msgs.msg import ModelState
-from nlpsim.msg import Peoplepose
+from gazebosim.msg import Peoplepose
 
 def spawn():
 

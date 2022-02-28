@@ -8,7 +8,7 @@ from scipy.spatial import distance
 
 from nav_msgs.msg import Odometry
 
-from nlpsim.msg import Peoplepose
+from gazebosim.msg import Peoplepose
 
 from yolov3_pytorch_ros.msg import BoundingBoxes, BoundingBox
 

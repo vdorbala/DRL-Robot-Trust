@@ -3,7 +3,7 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
   <arg name="use_sim_time" value="true"/>
   <arg name="debug" value="false"/>
-  <arg name="world_name" value="$(find nlpsim)/worlds/gullible.world"/>
+  <arg name="world_name" value="$(find gazebosim)/worlds/gullible.world"/>
   <!-- <arg name="headless" value="true"/> -->
   <!-- <arg name="gui" value="false"/> -->
   </include>
@@ -23,17 +23,17 @@
   <remap from="move_base_simple/goal" to="robot_1/move_base_simple/goal"/>
   </node> -->
 
-  <include file="$(find nlpsim)/launch/detector.launch">
+  <include file="$(find gazebosim)/launch/detector.launch">
   </include>
 
-<!--   <node pkg="nlpsim" type="random_pose_generator.py" name="hum_generate"/>
+<!--   <node pkg="gazebosim" type="random_pose_generator.py" name="hum_generate"/>
   
-  <node pkg="nlpsim" type="move_person.sh" name="hum_move"/>
+  <node pkg="gazebosim" type="move_person.sh" name="hum_move"/>
 
-  <node pkg="nlpsim" type="ktm.py" name="ktm"/>
+  <node pkg="gazebosim" type="ktm.py" name="ktm"/>
 
-  <node pkg="nlpsim" type="servoing_interaction.py" name="interaction"/>
+  <node pkg="gazebosim" type="servoing_interaction.py" name="interaction"/>
 
-  <node pkg="nlpsim" type="intersection_nav.py" name="navstrat2"/>
+  <node pkg="gazebosim" type="intersection_nav.py" name="navstrat2"/>
  -->
 </launch>

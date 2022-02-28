@@ -3,7 +3,7 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
   <arg name="use_sim_time" value="true"/>
   <arg name="debug" value="false"/>
-  <arg name="world_name" value="$(find nlpsim)/worlds/gullible.world"/>
+  <arg name="world_name" value="$(find gazebosim)/worlds/gullible.world"/>
   <!-- <arg name="headless" value="true"/> -->
   <!-- <arg name="gui" value="false"/> -->
   </include>
@@ -23,7 +23,7 @@
   <remap from="move_base_simple/goal" to="robot_1/move_base_simple/goal"/>
   </node> -->
 
-  <include file="$(find nlpsim)/launch/detector.launch">
+  <include file="$(find gazebosim)/launch/detector.launch">
   </include>
 
 </launch>
