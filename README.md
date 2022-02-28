@@ -1,10 +1,9 @@
 # Can a Robot Trust You?: A DRL-Based Approach to Trust-Driven Human-Guided Navigation
-### V.S. Dorbala, Arjun Srinivasan, Aniket Bera
 
 This repo contains the code for our ICRA 2021 paper - 
 
-[**Can a Robot Trust You?: A DRL-Based Approach to Trust-Driven Human-Guided Navigation**](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9561983). <br>
-Vishnu Sashank Dorbala, Arjun Srinivasan, Aniket Bera
+### [**Can a Robot Trust You?: A DRL-Based Approach to Trust-Driven Human-Guided Navigation**](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9561983). <br>
+### Vishnu Sashank Dorbala, Arjun Srinivasan, Aniket Bera
 
 Please do cite our work if you found this useful:
 
