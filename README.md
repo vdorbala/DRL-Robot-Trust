@@ -1,8 +1,7 @@
 # Can a Robot Trust You?: A DRL-Based Approach to Trust-Driven Human-Guided Navigation
 
 This repo contains the code for our ICRA 2021 paper - 
-
-#### [**Can a Robot Trust You?: A DRL-Based Approach to Trust-Driven Human-Guided Navigation**](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9561983). <br>
+#### [**Can a Robot Trust You?: A DRL-Based Approach to Trust-Driven Human-Guided Navigation**](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9561983).<br>
 ##### Vishnu Sashank Dorbala, Arjun Srinivasan, Aniket Bera
 
 Please do cite our work if you found this useful:
@@ -22,7 +21,7 @@ Please do cite our work if you found this useful:
 
 <img src="https://obj.umiacs.umd.edu/gamma-umd-website-imgs/researchdirections/socrob/robotrust_front_image.jpg">
 
-## Abstract:
+## Abstract
 *Humans are known to construct cognitive maps
 of their everyday surroundings using a variety of perceptual
 inputs. As such, when a human is asked for directions to a
@@ -40,7 +39,7 @@ this end, we look at training a policy that learns to navigate
 towards a goal location using only trustworthy human guidance,
 driven by its own robot trust metric.*
 
-## Installtion Steps
+## Installation Steps
 
 For the DRL pipeline, refer to instructions in the DRL_exps folder. <br>
 For the Gazebo environment, refer to instructions in the gazebo_exps folder. <br>
