@@ -3,12 +3,12 @@ import argparse
 import time
 import datetime
 
-from stable_baselines.common.policies import FeedForwardPolicy, register_policy
-from stable_baselines.common.env_checker import check_env
-from stable_baselines.common.callbacks import BaseCallback
+# from stable_baselines3.common.policies import MlpPolicy, register_policy
+from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.callbacks import BaseCallback
 
-# from stable_baselines.common.vec_env import SubprocVecEnv
-from stable_baselines import PPO2
+# from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3 import PPO
 import tensorboardX
 import sys
 import torch
@@ -22,16 +22,17 @@ from gym_minigrid.window import Window
 import logging
 import os
 
-import tensorflow as tf
+from stable_baselines3.common.logger import TensorBoardOutputFormat
 
 # Parse arguments
 
-class CustomPolicy(FeedForwardPolicy):
-    def __init__(self, *args, **kwargs):
-        super(CustomPolicy, self).__init__(*args, **kwargs,
-                                           net_arch=[dict(pi=[144, 144, 144],
-                                                          vf=[144, 144, 144])],
-                                           feature_extraction="mlp")
+# For SB2
+# class CustomPolicy(MlpPolicy):
+#     def __init__(self, *args, **kwargs):
+#         super(CustomPolicy, self).__init__(*args, **kwargs,
+#                                            net_arch=[dict(pi=[144, 144, 144],
+#                                                           vf=[144, 144, 144])],
+#                                            feature_extraction="mlp")
 
 
 #Utility Functions
@@ -95,23 +96,16 @@ class TensorboardCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         # Log additional tensor
-        print(self.locals['infos'])
         confval = self.locals['infos'][0]['confval']
         distance = self.locals['infos'][0]['distance']
-        # print("Conf values was {}".format(confval))
-        # if not self.is_tb_set:
-        #     with self.model.graph.as_default():
-        #         tf.summary.scalar('value_target', tf.reduce_mean(self.model.value_target))
-        #         self.model.summary = tf.summary.merge_all()
-        #     self.is_tb_set = True
-        # Log scalar value (here a random variable)
+
         value = confval
-        summary = tf.Summary(value=[tf.Summary.Value(tag='confidence_score', simple_value=value)])
-        self.locals['writer'].add_summary(summary, self.num_timesteps)
+        self.logger.record('confidence_score', value)
+        # self.locals['writer'].add_summary(summary, self.num_timesteps)
         
         value = distance
-        summary = tf.Summary(value=[tf.Summary.Value(tag='distance', simple_value=value)])
-        self.locals['writer'].add_summary(summary, self.num_timesteps)
+        self.logger.record('distance', value)
+        # self.locals['writer'].add_summary(summary, self.num_timesteps)
 
         return True
 
@@ -133,7 +127,7 @@ def train():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Load environments
 
-    env = 'MiniGrid-Dynamic-Obstacles-40x40-v0'
+    env = 'MiniGrid-Dynamic-Obstacles-30x30-v0'
 
     envs = []
     for i in range(1):
@@ -157,10 +151,16 @@ def train():
     print("Observation space is ! {}".format(obs_space))
 
     # Load algo
-    algo = PPO2(CustomPolicy, envs[0], n_steps=10, ent_coef=0.01, learning_rate=0.01, nminibatches=5, tensorboard_log="./logs/", verbose=1)
+    algo = PPO("MlpPolicy", envs[0], policy_kwargs = policy_kwargs, n_steps=10, ent_coef=0.01, learning_rate=0.01, batch_size=5, tensorboard_log="./logs/", verbose=1)
     algo.learn(total_timesteps=10, callback=TensorboardCallback())
     algo.save("testlogs_{}".format(time.time()))
 
 
 if __name__ == '__main__':
+
+    ## For SB3
+    policy_kwargs = dict(activation_fn=torch.nn.ReLU,
+                         net_arch=[dict(pi=[144, 144, 144],
+                                        vf=[144, 144, 144])])
+
     train()

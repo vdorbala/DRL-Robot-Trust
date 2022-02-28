@@ -10,7 +10,7 @@ import csv
 
 
 # from gym_minigrid.envs.gen_cmd import get_dir,get_conf
-from stable_baselines.common.callbacks import BaseCallback
+from stable_baselines3.common.callbacks import BaseCallback
 
 from gym_minigrid.envs.maze import maze, m2g, gazebo, inter_x, mid_x, mx
 from gym_minigrid.envs.pathplan import astar

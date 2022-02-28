@@ -10,7 +10,7 @@ import csv
 
 
 # from gym_minigrid.envs.gen_cmd import get_dir,get_conf
-from stable_baselines.common.callbacks import BaseCallback
+from stable_baselines3.common.callbacks import BaseCallback
 
 from gym_minigrid.envs.dynamic2 import DynamicObstaclesEnv2
 from gym_minigrid.envs.maze import maze, m2g, gazebo, inter_x, mid_x, mx
@@ -55,7 +55,7 @@ class DynamicObstaclesEnv(MiniGridEnv):
 
         # self.action_space = [-1, 0, 1, 2, 7]
 
-        print("Action space is {}".format(self.action_space))
+        # print("Action space is {}".format(self.action_space))
 
         self.reward_range = (-200, 500)
 

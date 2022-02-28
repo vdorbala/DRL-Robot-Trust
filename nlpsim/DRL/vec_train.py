@@ -3,22 +3,21 @@ import argparse
 import time
 import datetime
 
-from stable_baselines.common.policies import FeedForwardPolicy, register_policy
-from stable_baselines.common.env_checker import check_env
+from stable_baselines3.common.policies import FeedForwardPolicy, register_policy
+from stable_baselines3.common.env_checker import check_env
 
-from stable_baselines.common.policies import MlpPolicy
-from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
-from stable_baselines.common import set_global_seeds
+from stable_baselines3.common.policies import MlpPolicy
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common import set_global_seeds
 
-from stable_baselines.common.evaluation import evaluate_policy
+from stable_baselines3.common.evaluation import evaluate_policy
 
-# from stable_baselines.common.vec_env import SubprocVecEnv
-from stable_baselines import PPO2
+# from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3 import PPO
 import tensorboardX
 import sys
 import torch
-from stable_baselines.common.callbacks import BaseCallback
-import tensorflow as tf
+from stable_baselines3.common.callbacks import BaseCallback
 
 
 import time
@@ -198,7 +197,7 @@ def train():
     TRAIN_STEPS = 10000
     # Number of episodes for evaluation
     EVAL_EPS = 100
-    ALGO = PPO2
+    ALGO = PPO
 
     eval_env = gym.make(env_id)
 
@@ -219,7 +218,7 @@ def train():
     for experiment in range(NUM_EXPERIMENTS):
         # it is recommended to run several experiments due to variability in results
         train_env.reset()
-        model = ALGO('MlpPolicy', train_env, n_steps=15, nminibatches=5, learning_rate=0.1, tensorboard_log="./vector_logs_new1/", verbose=1)
+        model = ALGO('MlpPolicy', train_env, n_steps=15, batch_size=5, learning_rate=0.1, tensorboard_log="./vector_logs_new1/", verbose=1)
         start = time.time()
         model.learn(total_timesteps=TRAIN_STEPS, callback=TensorboardCallback())
         times.append(time.time() - start)
@@ -249,7 +248,7 @@ def train():
 
 
     # # Load algo
-    # algo = PPO2(CustomPolicy, env, n_steps=15, ent_coef=0.01, learning_rate=0.01, nminibatches=5, tensorboard_log="./logs/", verbose=1)
+    # algo = PPO(CustomPolicy, env, n_steps=15, ent_coef=0.01, learning_rate=0.01, batch_size=5, tensorboard_log="./logs/", verbose=1)
     # algo.learn(total_timesteps=10000)
     # algo.save("hricra_{}".format(time.time()))
 
