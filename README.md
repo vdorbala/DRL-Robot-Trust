@@ -18,18 +18,23 @@ Please do cite our work if you found this useful:
 }
 ```
 
+## Overview
+
+<img src="https://obj.umiacs.umd.edu/gamma-umd-website-imgs/researchdirections/socrob/robotrust_front_image.jpg">
+
 ## Abstract:
 *Humans are known to construct cognitive maps
 of their everyday surroundings using a variety of perceptual
 inputs. As such, when a human is asked for directions to a
 particular location, their wayfinding capability in converting
-this cognitive map into directional instructions is challenged.
+this cognitive map into directional instructions is challenged. <br>
 Owing to spatial anxiety, the language used in the spoken
 instructions can be vague and often unclear. To account for
 this unreliability in navigational guidance, we propose a novel
 Deep Reinforcement Learning (DRL) based trust-driven robot
 navigation algorithm that learns humans’ trustworthiness to
-perform a language guided navigation task. Our approach seeks to answer the question as to whether
+perform a language guided navigation task. <br>
+Our approach seeks to answer the question as to whether
 a robot can trust a human’s navigational guidance or not. To
 this end, we look at training a policy that learns to navigate
 towards a goal location using only trustworthy human guidance,
