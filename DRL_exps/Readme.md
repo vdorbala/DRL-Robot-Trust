@@ -3,7 +3,6 @@
 
 Contains code for training the Robot Trust model using Deep RL.
 
-# Steps to execute
 ## Prerequisites:
 
   1. Install Pytorch (Used 1.10.2) with Python 3.7.0
@@ -22,7 +21,10 @@ Contains code for training the Robot Trust model using Deep RL.
 
   3. Install minigrid using ``python3 setup.py install``.
 
-##
+## Execution
+
   1. Run ``python3 single_train.py`` to run train on a **non-vecotrized** (single process) environment.
+
   2. Modify and run ``python3 vec_train.sh`` to an individual vectorized environment.
+
   3. Modify and run ``multirun.sh`` to run multiple vecotrized environments.
