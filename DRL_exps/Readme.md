@@ -3,7 +3,7 @@
 
 Contains code for training the Robot Trust model using Deep RL.
 
-## Prerequisites:
+## Prerequisites
 
   1. Install Pytorch (Used 1.10.2) with Python 3.7.0
 
