@@ -1,7 +1,7 @@
 
 # Deep Reinforcement Learning for Robot Trust
 
-Contains code for learning Robot Trust using Deep RL.
+Contains code for training the Robot Trust model using Deep RL.
 
 # Steps to execute
 ## Prerequisites:
@@ -23,6 +23,6 @@ Contains code for learning Robot Trust using Deep RL.
   3. Install minigrid using "python3 setup.py install".
 
 ##
-  1. Run 'python3 train_final.py' to run train on a **Non Vecotrized** (single process) environment.
-  2. Modify and run ``python3 vec_train.sh`` to run the vectorized environment.
-  3. Run ``multirun.sh`` to run multiple vecotrized environments.
+  1. Run ``python3 single_train.py`` to run train on a **non-vecotrized** (single process) environment.
+  2. Modify and run ``python3 vec_train.sh`` to an individual vectorized environment.
+  3. Modify and run ``multirun.sh`` to run multiple vecotrized environments.

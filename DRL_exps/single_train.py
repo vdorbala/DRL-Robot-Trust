@@ -162,5 +162,5 @@ if __name__ == '__main__':
     policy_kwargs = dict(activation_fn=torch.nn.ReLU,
                          net_arch=[dict(pi=[144, 144, 144],
                                         vf=[144, 144, 144])])
-
     train()
+

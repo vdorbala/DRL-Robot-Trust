@@ -3,16 +3,10 @@ import argparse
 import time
 import datetime
 
-from stable_baselines3.common.policies import FeedForwardPolicy, register_policy
 from stable_baselines3.common.env_checker import check_env
-
-from stable_baselines3.common.policies import MlpPolicy
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
-from stable_baselines3.common import set_global_seeds
-
 from stable_baselines3.common.evaluation import evaluate_policy
 
-# from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3 import PPO
 import tensorboardX
 import sys
@@ -30,15 +24,6 @@ from gym_minigrid.window import Window
 
 import logging
 import os
-
-# Parse arguments
-
-class CustomPolicy(FeedForwardPolicy):
-    def __init__(self, *args, **kwargs):
-        super(CustomPolicy, self).__init__(*args, **kwargs,
-                                           net_arch=[dict(pi=[144, 144, 144],
-                                                          vf=[144, 144, 144])],
-                                           feature_extraction="mlp")
 
 
 #Utility Functions
@@ -105,7 +90,6 @@ def make_env(env_id, rank, seed=0):
         # Important: use a different seed for each environment
         env.seed(seed + rank)
         return env
-    set_global_seeds(seed)
     return _init
 
 
@@ -130,23 +114,14 @@ class TensorboardCallback(BaseCallback):
             distance += self.locals['infos'][i]['distance']
 
         distance = (distance/16)
-        # confval = self.locals['infos'][0]['confval']
-        # distance = self.locals['infos'][0]['distance']
-        # print("Conf values was {}".format(confval))
-        # if not self.is_tb_set:
-        #     with self.model.graph.as_default():
-        #         tf.summary.scalar('value_target', tf.reduce_mean(self.model.value_target))
-        #         self.model.summary = tf.summary.merge_all()
-        #     self.is_tb_set = True
-        # Log scalar value (here a random variable)
+
         value = confval
-        summary = tf.Summary(value=[tf.Summary.Value(tag='confidence_score', simple_value=value)])
-        self.locals['writer'].add_summary(summary, self.num_timesteps)
+        self.logger.record('confidence_score', value)
+        # self.locals['writer'].add_summary(summary, self.num_timesteps)
         
         value = distance
-        summary = tf.Summary(value=[tf.Summary.Value(tag='distance', simple_value=value)])
-        self.locals['writer'].add_summary(summary, self.num_timesteps)
-
+        self.logger.record('distance', value)
+        # self.locals['writer'].add_summary(summary, self.num_timesteps)
         return True
 
 
@@ -218,7 +193,7 @@ def train():
     for experiment in range(NUM_EXPERIMENTS):
         # it is recommended to run several experiments due to variability in results
         train_env.reset()
-        model = ALGO('MlpPolicy', train_env, n_steps=15, batch_size=5, learning_rate=0.1, tensorboard_log="./vector_logs_new1/", verbose=1)
+        model = ALGO('MlpPolicy', train_env, policy_kwargs = policy_kwargs, n_steps=15, batch_size=5, learning_rate=0.1, tensorboard_log="./vector_logs_new1/", verbose=1)
         start = time.time()
         model.learn(total_timesteps=TRAIN_STEPS, callback=TensorboardCallback())
         times.append(time.time() - start)
@@ -247,11 +222,10 @@ def train():
     _ = plt.ylabel('Training steps per second')
 
 
-    # # Load algo
-    # algo = PPO(CustomPolicy, env, n_steps=15, ent_coef=0.01, learning_rate=0.01, batch_size=5, tensorboard_log="./logs/", verbose=1)
-    # algo.learn(total_timesteps=10000)
-    # algo.save("hricra_{}".format(time.time()))
-
-
 if __name__ == '__main__':
+    ## For SB3
+    policy_kwargs = dict(activation_fn=torch.nn.ReLU,
+                         net_arch=[dict(pi=[144, 144, 144],
+                                        vf=[144, 144, 144])])
+
     train()
