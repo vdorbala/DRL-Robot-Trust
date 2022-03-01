@@ -20,7 +20,7 @@ Contains code for training the Robot Trust model using Deep RL.
   
   3. The final directory should look like gym-minigrid (You can also copy the entire folder and install it.)
 
-  3. Install minigrid using "python3 setup.py install".
+  3. Install minigrid using ``python3 setup.py install``.
 
 ##
   1. Run ``python3 single_train.py`` to run train on a **non-vecotrized** (single process) environment.
